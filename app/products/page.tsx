@@ -1,27 +1,66 @@
 import { Suspense } from "react";
-import connectDB from "@/lib/db";
-import Product from "@/lib/models/Product";
 import Link from "next/link";
+import { ChevronRight } from "lucide-react";
+
 import ProductsFilters from "@/components/ProductsFilters";
 import ProductsClient from "@/components/ProductsClient";
 import ProductsFiltersSkeleton from "@/components/ProductsFiltersSkeleton";
 import ProductsGridSkeleton from "@/components/ProductsGridSkeleton";
-import { ChevronRight, Search } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import ProductsSearchBar from "../../components/ProductsSearchBar";
+import connectDB from "@/lib/db";
+import Product from "@/lib/models/Product";
+import Category from "@/lib/models/Category";
+import Color from "@/lib/models/Color";
+import Size from "@/lib/models/Size";
+import type { SortOrder } from "mongoose";
 
 export const revalidate = 3600; // Revalidate every hour
 
+type ProductsPageSearchParams = {
+  page?: string | string[];
+  category?: string | string[];
+  subcategory?: string | string[];
+  colors?: string | string[];
+  sizes?: string | string[];
+  sort?: string | string[];
+  search?: string | string[];
+};
+
 interface ProductsPageProps {
-  searchParams: Promise<{
-    page?: string;
-    category?: string;
-    subcategory?: string;
-    colors?: string;
-    sizes?: string;
-    sort?: string;
-    search?: string;
-  }>;
+  searchParams: Promise<ProductsPageSearchParams>;
 }
+
+const buildSortQuery = (
+  sort: string,
+  useTextSearch: boolean
+): Record<string, SortOrder | { $meta: string }> => {
+  if (useTextSearch && sort === "most-popular") {
+    return { score: { $meta: "textScore" }, createdAt: -1 };
+  }
+
+  if (sort === "price-low") {
+    return { price: 1 };
+  }
+
+  if (sort === "price-high") {
+    return { price: -1 };
+  }
+
+  if (sort === "newest") {
+    return { createdAt: -1 };
+  }
+
+  return { createdAt: -1 };
+};
+
+const isTextIndexError = (error: unknown) => {
+  if (!error || typeof error !== "object") return false;
+  const err = error as { code?: number; message?: string };
+  return (
+    err.code === 27 ||
+    err.message?.toLowerCase().includes("text index required")
+  );
+};
 
 async function getProducts(
   page: number = 1,
@@ -35,11 +74,20 @@ async function getProducts(
   } = {}
 ) {
   try {
-    await connectDB();
     const limit = 9; // Changed to 9 to match 3x3 grid
     const skip = (page - 1) * limit;
 
     const query: any = {};
+    const projection: Record<string, any> = {
+      title: 1,
+      description: 1,
+      price: 1,
+      images: 1,
+      slug: 1,
+      category: 1,
+      subcategory: 1,
+      variants: 1,
+    };
 
     if (filters.category) {
       query.category = filters.category;
@@ -57,37 +105,86 @@ async function getProducts(
       query["variants.sizes.size"] = { $in: filters.sizes };
     }
 
-    if (filters.search) {
-      query.$or = [
-        { title: { $regex: filters.search, $options: "i" } },
-        { description: { $regex: filters.search, $options: "i" } },
-      ];
+    const searchTerm = filters.search?.trim();
+    let useTextSearch = Boolean(searchTerm && searchTerm.length >= 2);
+    const regexConditions =
+      searchTerm && searchTerm.length > 0
+        ? [
+            { title: { $regex: searchTerm, $options: "i" } },
+            { description: { $regex: searchTerm, $options: "i" } },
+          ]
+        : null;
+
+    if (useTextSearch) {
+      query.$text = { $search: searchTerm };
+      projection.score = { $meta: "textScore" };
+    } else if (regexConditions) {
+      query.$or = regexConditions;
     }
 
-    let sortQuery: any = { createdAt: -1 }; // Default sort
-    if (filters.sort === "price-low") {
-      sortQuery = { price: 1 };
-    } else if (filters.sort === "price-high") {
-      sortQuery = { price: -1 };
-    } else if (filters.sort === "newest") {
-      sortQuery = { createdAt: -1 };
-    } else if (filters.sort === "most-popular") {
-      // For now, use createdAt as popularity proxy
-      sortQuery = { createdAt: -1 };
+    const selectedSort = filters.sort || "most-popular";
+
+    const runQuery = () =>
+      Promise.all([
+        Product.find(query)
+          .sort(buildSortQuery(selectedSort, useTextSearch))
+          .skip(skip)
+          .limit(limit)
+          .select(projection)
+          .lean(),
+        Product.countDocuments(query),
+      ]);
+
+    let result: { products: any[]; total: number };
+
+    try {
+      const [products, total] = await runQuery();
+      result = { products, total };
+    } catch (error) {
+      if (useTextSearch && isTextIndexError(error)) {
+        console.warn(
+          "Full-text search index missing, falling back to regex search."
+        );
+        useTextSearch = false;
+        delete query.$text;
+        delete projection.score;
+        if (regexConditions) {
+          query.$or = regexConditions;
+        }
+        const [fallbackProducts, fallbackTotal] = await Promise.all([
+          Product.find(query)
+            .sort(buildSortQuery(selectedSort, useTextSearch))
+            .skip(skip)
+            .limit(limit)
+            .select(projection)
+            .lean(),
+          Product.countDocuments(query),
+        ]);
+        result = {
+          products: fallbackProducts,
+          total: fallbackTotal,
+        };
+      } else {
+        throw error;
+      }
     }
 
-    const [products, total] = await Promise.all([
-      Product.find(query).sort(sortQuery).skip(skip).limit(limit).lean(),
-      Product.countDocuments(query),
-    ]);
+    const sanitizedProducts = result.products.map((product: any) => {
+      if ("score" in product) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { score, ...rest } = product;
+        return rest;
+      }
+      return product;
+    });
 
     return {
-      products: JSON.parse(JSON.stringify(products)),
+      products: JSON.parse(JSON.stringify(sanitizedProducts)),
       pagination: {
         page,
         limit,
-        total,
-        pages: Math.ceil(total / limit),
+        total: result.total,
+        pages: Math.ceil(result.total / limit),
       },
     };
   } catch (error) {
@@ -104,28 +201,50 @@ async function getProducts(
   }
 }
 
+async function getFiltersData() {
+  const [categories, colors, sizes] = await Promise.all([
+    Category.find().sort({ name: 1 }).lean(),
+    Color.find().sort({ name: 1 }).lean(),
+    Size.find().sort({ order: 1, name: 1 }).lean(),
+  ]);
+
+  return {
+    categories: JSON.parse(JSON.stringify(categories)),
+    colors: JSON.parse(JSON.stringify(colors)),
+    sizes: JSON.parse(JSON.stringify(sizes)),
+  };
+}
+
 export default async function ProductsPage({
   searchParams,
 }: ProductsPageProps) {
-  const params = await searchParams;
-  // Ensure page is at least 1, default to 1 if invalid
-  const pageParam = parseInt(params.page || "1");
-  const page = pageParam > 0 ? pageParam : 1;
-  const category = params.category;
-  const subcategory = params.subcategory;
-  const colors = params.colors?.split(",").filter(Boolean);
-  const sizes = params.sizes?.split(",").filter(Boolean);
-  const sort = params.sort || "most-popular";
-  const search = params.search || "";
+  await connectDB();
 
-  const { products, pagination } = await getProducts(page, {
-    category,
-    subcategory,
-    colors,
-    sizes,
-    sort,
-    search,
-  });
+  const params = (await searchParams) ?? {};
+
+  const getParamValue = (value?: string | string[]) =>
+    Array.isArray(value) ? value[0] : value;
+
+  const pageParam = parseInt(getParamValue(params.page) || "1");
+  const page = pageParam > 0 ? pageParam : 1;
+  const category = getParamValue(params.category);
+  const subcategory = getParamValue(params.subcategory);
+  const colors = getParamValue(params.colors)?.split(",").filter(Boolean);
+  const sizes = getParamValue(params.sizes)?.split(",").filter(Boolean);
+  const sort = getParamValue(params.sort) || "most-popular";
+  const search = getParamValue(params.search)?.trim() || "";
+
+  const [{ products, pagination }, filtersData] = await Promise.all([
+    getProducts(page, {
+      category,
+      subcategory,
+      colors,
+      sizes,
+      sort,
+      search,
+    }),
+    getFiltersData(),
+  ]);
 
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-20 py-4 sm:py-12 lg:py-16">
@@ -139,39 +258,18 @@ export default async function ProductsPage({
       </div>
 
       {/* Search Bar */}
-      <form
-        action="/products"
-        method="get"
-        className="w-full max-w-xl  sm:mb-8 mb-4 relative"
-      >
-        {/* Preserve existing filters when searching */}
-        {category && <input type="hidden" name="category" value={category} />}
-        {subcategory && (
-          <input type="hidden" name="subcategory" value={subcategory} />
-        )}
-        {params.colors && (
-          <input type="hidden" name="colors" value={params.colors} />
-        )}
-        {params.sizes && (
-          <input type="hidden" name="sizes" value={params.sizes} />
-        )}
-        {params.sort && <input type="hidden" name="sort" value={params.sort} />}
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-        <Input
-          type="text"
-          name="search"
-          defaultValue={search}
-          placeholder="Search for products..."
-          className="pl-10 w-full sm:w-1/2 bg-muted/50 border-border"
-        />
-      </form>
+      <ProductsSearchBar initialValue={search} />
 
       {/* Main Layout: Sidebar + Content */}
       <div className="flex flex-col lg:flex-row gap-4 lg:gap-12">
         {/* Filters Sidebar */}
         <aside className="lg:sticky lg:top-4 lg:h-fit">
           <Suspense fallback={<ProductsFiltersSkeleton />}>
-            <ProductsFilters />
+            <ProductsFilters
+              categories={filtersData.categories}
+              colors={filtersData.colors}
+              sizes={filtersData.sizes}
+            />
           </Suspense>
         </aside>
 

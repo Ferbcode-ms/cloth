@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Separator } from "@/components/ui/separator";
 import { Filter, ChevronRight, SlidersHorizontal } from "lucide-react";
-import { cn } from "@/lib/utils";
-import ProductsFiltersSkeleton from "./ProductsFiltersSkeleton";
+
+import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 interface Subcategory {
   name: string;
@@ -31,19 +31,22 @@ interface Size {
   _id: string;
   name: string;
   value: string;
-  order: number;
+  order?: number;
 }
 
-export default function ProductsFilters() {
+interface ProductsFiltersProps {
+  categories: Category[];
+  colors: Color[];
+  sizes: Size[];
+}
+
+export default function ProductsFilters({
+  categories,
+  colors,
+  sizes,
+}: ProductsFiltersProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [colors, setColors] = useState<Color[]>([]);
-  const [sizes, setSizes] = useState<Size[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<Category | null>(
-    null
-  );
-
   const [selectedCategoryName, setSelectedCategoryName] = useState(
     searchParams.get("category") || ""
   );
@@ -58,7 +61,6 @@ export default function ProductsFilters() {
   );
 
   const [isInitialMount, setIsInitialMount] = useState(true);
-  const [isLoading, setIsLoading] = useState(true);
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
 
   // Auto-apply filters when they change
@@ -97,52 +99,12 @@ export default function ProductsFilters() {
     return () => clearTimeout(timeoutId);
   }, [applyFilters]);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setIsLoading(true);
-      try {
-        // Fetch categories, colors, and sizes in parallel
-        const [categoriesRes, colorsRes, sizesRes] = await Promise.all([
-          fetch("/api/categories"),
-          fetch("/api/colors"),
-          fetch("/api/sizes"),
-        ]);
-
-        const [categoriesData, colorsData, sizesData] = await Promise.all([
-          categoriesRes.json(),
-          colorsRes.json(),
-          sizesRes.json(),
-        ]);
-
-        setCategories(categoriesData || []);
-        setColors(colorsData || []);
-        setSizes(sizesData || []);
-
-        // Set selected category if category param exists
-        if (selectedCategoryName) {
-          const cat = categoriesData.find(
-            (c: Category) =>
-              c.name === selectedCategoryName || c.slug === selectedCategoryName
-          );
-          if (cat) setSelectedCategory(cat);
-        }
-      } catch (error) {
-        console.error("Error fetching filter data:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchData();
-  }, [selectedCategoryName]);
-
   const handleCategorySelect = (category: Category) => {
     if (selectedCategoryName === category.name) {
       setSelectedCategoryName("");
-      setSelectedCategory(null);
       setSelectedSubcategory("");
     } else {
       setSelectedCategoryName(category.name);
-      setSelectedCategory(category);
       setSelectedSubcategory("");
     }
   };
@@ -164,10 +126,6 @@ export default function ProductsFilters() {
       prev.includes(size) ? prev.filter((s) => s !== size) : [...prev, size]
     );
   };
-
-  if (isLoading) {
-    return <ProductsFiltersSkeleton />;
-  }
 
   const filtersContent = (
     <>

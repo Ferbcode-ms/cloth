@@ -60,9 +60,16 @@ ProductSchema.pre("save", function (next) {
   next();
 });
 
-// Create indexes for category and subcategory
+// Create indexes for frequently queried fields
 ProductSchema.index({ category: 1 });
 ProductSchema.index({ subcategory: 1 });
+ProductSchema.index(
+  { title: "text", description: "text" },
+  {
+    weights: { title: 5, description: 1 },
+    name: "ProductTextSearch",
+  }
+);
 
 const Product: Model<IProduct> =
   mongoose.models.Product || mongoose.model<IProduct>("Product", ProductSchema);
