@@ -1,0 +1,327 @@
+"use client";
+
+import { useState, useEffect, useCallback } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Separator } from "@/components/ui/separator";
+import { Filter, ChevronRight, SlidersHorizontal } from "lucide-react";
+import { cn } from "@/lib/utils";
+import ProductsFiltersSkeleton from "./ProductsFiltersSkeleton";
+import { Button } from "@/components/ui/button";
+
+interface Subcategory {
+  name: string;
+  slug: string;
+}
+
+interface Category {
+  _id: string;
+  name: string;
+  slug: string;
+  subcategories: Subcategory[];
+}
+
+interface Color {
+  _id: string;
+  name: string;
+  value: string;
+  hex: string;
+}
+
+interface Size {
+  _id: string;
+  name: string;
+  value: string;
+  order: number;
+}
+
+export default function ProductsFilters() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [colors, setColors] = useState<Color[]>([]);
+  const [sizes, setSizes] = useState<Size[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<Category | null>(
+    null
+  );
+
+  const [selectedCategoryName, setSelectedCategoryName] = useState(
+    searchParams.get("category") || ""
+  );
+  const [selectedSubcategory, setSelectedSubcategory] = useState(
+    searchParams.get("subcategory") || ""
+  );
+  const [selectedColors, setSelectedColors] = useState<string[]>(
+    searchParams.get("colors")?.split(",").filter(Boolean) || []
+  );
+  const [selectedSizes, setSelectedSizes] = useState<string[]>(
+    searchParams.get("sizes")?.split(",").filter(Boolean) || []
+  );
+
+  const [isInitialMount, setIsInitialMount] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
+
+  // Auto-apply filters when they change
+  const applyFilters = useCallback(() => {
+    // Skip on initial mount to avoid unnecessary navigation
+    if (isInitialMount) {
+      setIsInitialMount(false);
+      return;
+    }
+
+    const params = new URLSearchParams();
+
+    if (selectedCategoryName) params.set("category", selectedCategoryName);
+    if (selectedSubcategory) params.set("subcategory", selectedSubcategory);
+    if (selectedColors.length > 0)
+      params.set("colors", selectedColors.join(","));
+    if (selectedSizes.length > 0) params.set("sizes", selectedSizes.join(","));
+
+    params.set("page", "1"); // Reset to first page
+    router.push(`/products?${params.toString()}`);
+  }, [
+    selectedCategoryName,
+    selectedSubcategory,
+    selectedColors,
+    selectedSizes,
+    router,
+    isInitialMount,
+  ]);
+
+  // Auto-apply filters with debounce
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      applyFilters();
+    }, 300); // 300ms debounce
+
+    return () => clearTimeout(timeoutId);
+  }, [applyFilters]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        // Fetch categories, colors, and sizes in parallel
+        const [categoriesRes, colorsRes, sizesRes] = await Promise.all([
+          fetch("/api/categories"),
+          fetch("/api/colors"),
+          fetch("/api/sizes"),
+        ]);
+
+        const [categoriesData, colorsData, sizesData] = await Promise.all([
+          categoriesRes.json(),
+          colorsRes.json(),
+          sizesRes.json(),
+        ]);
+
+        setCategories(categoriesData || []);
+        setColors(colorsData || []);
+        setSizes(sizesData || []);
+
+        // Set selected category if category param exists
+        if (selectedCategoryName) {
+          const cat = categoriesData.find(
+            (c: Category) =>
+              c.name === selectedCategoryName || c.slug === selectedCategoryName
+          );
+          if (cat) setSelectedCategory(cat);
+        }
+      } catch (error) {
+        console.error("Error fetching filter data:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchData();
+  }, [selectedCategoryName]);
+
+  const handleCategorySelect = (category: Category) => {
+    if (selectedCategoryName === category.name) {
+      setSelectedCategoryName("");
+      setSelectedCategory(null);
+      setSelectedSubcategory("");
+    } else {
+      setSelectedCategoryName(category.name);
+      setSelectedCategory(category);
+      setSelectedSubcategory("");
+    }
+  };
+
+  const handleSubcategorySelect = (subcategorySlug: string) => {
+    setSelectedSubcategory(
+      selectedSubcategory === subcategorySlug ? "" : subcategorySlug
+    );
+  };
+
+  const toggleColor = (color: string) => {
+    setSelectedColors((prev) =>
+      prev.includes(color) ? prev.filter((c) => c !== color) : [...prev, color]
+    );
+  };
+
+  const toggleSize = (size: string) => {
+    setSelectedSizes((prev) =>
+      prev.includes(size) ? prev.filter((s) => s !== size) : [...prev, size]
+    );
+  };
+
+  if (isLoading) {
+    return <ProductsFiltersSkeleton />;
+  }
+
+  const filtersContent = (
+    <>
+      <div className="flex items-center gap-2">
+        <Filter className="h-5 w-5" />
+        <h2 className="text-xl font-semibold">Filters</h2>
+      </div>
+
+      {/* Categories */}
+      <div className="space-y-4">
+        <h3 className="text-base font-semibold">Product Categories</h3>
+        <div className="space-y-2">
+          {categories.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              Loading categories...
+            </p>
+          ) : (
+            categories.map((category) => (
+              <div key={category._id} className="space-y-1">
+                <button
+                  onClick={() => handleCategorySelect(category)}
+                  className={cn(
+                    "w-full flex items-center justify-between text-sm hover:text-foreground transition-colors",
+                    selectedCategoryName === category.name
+                      ? "text-foreground font-medium"
+                      : "text-muted-foreground"
+                  )}
+                >
+                  <span>{category.name}</span>
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+                {selectedCategoryName === category.name &&
+                  category.subcategories &&
+                  category.subcategories.length > 0 && (
+                    <div className="ml-4 space-y-1 mt-1">
+                      {category.subcategories.map((sub) => (
+                        <button
+                          key={sub.slug}
+                          onClick={() => handleSubcategorySelect(sub.slug)}
+                          className={cn(
+                            "w-full flex items-center justify-between text-xs hover:text-foreground transition-colors",
+                            selectedSubcategory === sub.slug
+                              ? "text-foreground font-medium"
+                              : "text-muted-foreground"
+                          )}
+                        >
+                          <span>{sub.name}</span>
+                          <ChevronRight className="h-3 w-3" />
+                        </button>
+                      ))}
+                    </div>
+                  )}
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+
+      <Separator />
+
+      {/* Colors */}
+      <div className="space-y-4">
+        <h3 className="text-base font-semibold">Colors</h3>
+        {colors.length === 0 ? (
+          <p className="text-sm text-muted-foreground">Loading colors...</p>
+        ) : (
+          <div className="grid grid-cols-5 gap-3">
+            {colors.map((color) => (
+              <button
+                key={color._id}
+                onClick={() => toggleColor(color.value)}
+                className={cn(
+                  "relative h-10 w-10 rounded-full border-2 transition-all",
+                  selectedColors.includes(color.value)
+                    ? "border-foreground scale-110"
+                    : "border-border hover:border-foreground/50"
+                )}
+                style={{
+                  backgroundColor: color.hex,
+                  borderColor: color.hex === "#ffffff" ? "#e5e7eb" : undefined,
+                }}
+                title={color.name}
+              >
+                {selectedColors.includes(color.value) && (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="h-2 w-2 rounded-full bg-white" />
+                  </div>
+                )}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <Separator />
+
+      {/* Sizes */}
+      <div className="space-y-4">
+        <h3 className="text-base font-semibold">Size</h3>
+        {sizes.length === 0 ? (
+          <p className="text-sm text-muted-foreground">Loading sizes...</p>
+        ) : (
+          <div className="grid grid-cols-3 gap-2">
+            {sizes.map((size) => (
+              <button
+                key={size._id}
+                onClick={() => toggleSize(size.value)}
+                className={cn(
+                  "px-3 py-2 text-sm border rounded-md transition-all",
+                  selectedSizes.includes(size.value)
+                    ? "bg-foreground text-background border-foreground"
+                    : "bg-background text-foreground border-border hover:border-foreground/50"
+                )}
+              >
+                {size.name}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    </>
+  );
+
+  return (
+    <div className="w-full lg:w-80">
+      {/* Mobile Toggle */}
+      <div className="lg:hidden mb-4">
+        <Button
+          variant="outline"
+          onClick={() => setIsMobileFiltersOpen((prev) => !prev)}
+          className="w-full justify-center"
+        >
+          <SlidersHorizontal className="h-4 w-4 mr-2" />
+          {isMobileFiltersOpen ? "Hide Filters" : "Show Filters"}
+        </Button>
+      </div>
+
+      <div
+        className={cn(
+          "space-y-8",
+          "lg:space-y-8",
+          !isMobileFiltersOpen ? "hidden lg:block" : "block",
+          "lg:sticky lg:top-4 lg:h-fit",
+          "lg:bg-transparent",
+          "lg:p-0",
+          "lg:shadow-none",
+          "lg:border-none",
+          isMobileFiltersOpen
+            ? "rounded-2xl border border-border bg-background/70 p-4 shadow-sm"
+            : ""
+        )}
+      >
+        {filtersContent}
+      </div>
+    </div>
+  );
+}
