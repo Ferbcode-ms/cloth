@@ -71,13 +71,33 @@ export default function ProductsFilters({
       return;
     }
 
-    const params = new URLSearchParams();
+    // Initialize with current params to preserve search, sort, etc.
+    const params = new URLSearchParams(searchParams.toString());
 
-    if (selectedCategoryName) params.set("category", selectedCategoryName);
-    if (selectedSubcategory) params.set("subcategory", selectedSubcategory);
-    if (selectedColors.length > 0)
+    // Update filter params
+    if (selectedCategoryName) {
+      params.set("category", selectedCategoryName);
+    } else {
+      params.delete("category");
+    }
+
+    if (selectedSubcategory) {
+      params.set("subcategory", selectedSubcategory);
+    } else {
+      params.delete("subcategory");
+    }
+
+    if (selectedColors.length > 0) {
       params.set("colors", selectedColors.join(","));
-    if (selectedSizes.length > 0) params.set("sizes", selectedSizes.join(","));
+    } else {
+      params.delete("colors");
+    }
+
+    if (selectedSizes.length > 0) {
+      params.set("sizes", selectedSizes.join(","));
+    } else {
+      params.delete("sizes");
+    }
 
     params.set("page", "1"); // Reset to first page
     router.push(`/products?${params.toString()}`);

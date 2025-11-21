@@ -85,12 +85,7 @@ export default function Navbar() {
     fetchCategories();
   }, []);
 
-  const navLinks = [
-    { name: "On Sale", href: "/products?sale=true" },
-    { name: "New Arrivals", href: "/products?new=true" },
-    { name: "Brands", href: "/products" },
-  ];
-
+  
   return (
     <>
       {/* Promotional Banner */}
@@ -190,16 +185,7 @@ export default function Navbar() {
                 )}
               </div>
 
-              {/* Other Nav Links */}
-              {navLinks.map((link) => (
-                <Link
-                  key={link.name}
-                  href={link.href}
-                  className="text-sm text-foreground hover:text-foreground/80 transition-colors"
-                >
-                  {link.name}
-                </Link>
-              ))}
+              
             </div>
 
             {/* Right Side Icons - Desktop */}
@@ -248,7 +234,7 @@ export default function Navbar() {
                   </Button>
                 </SheetTrigger>
                 <SheetContent
-                  side="left"
+                  side="right"
                   className="w-[280px] sm:w-[320px] p-0"
                 >
                   <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
@@ -311,16 +297,7 @@ export default function Navbar() {
                       </div>
 
                       {/* Other Mobile Links */}
-                      {navLinks.map((link) => (
-                        <SheetClose asChild key={link.name}>
-                          <Link
-                            href={link.href}
-                            className="text-base font-medium text-foreground hover:text-foreground/80 transition-colors py-2"
-                          >
-                            {link.name}
-                          </Link>
-                        </SheetClose>
-                      ))}
+                      
                     </div>
                   </div>
                 </SheetContent>

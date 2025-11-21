@@ -26,8 +26,48 @@ type ProductsPageSearchParams = {
   search?: string | string[];
 };
 
+import { Metadata } from "next";
+
 interface ProductsPageProps {
   searchParams: Promise<ProductsPageSearchParams>;
+}
+
+export async function generateMetadata({
+  searchParams,
+}: ProductsPageProps): Promise<Metadata> {
+  const params = await searchParams;
+  const category = Array.isArray(params.category)
+    ? params.category[0]
+    : params.category;
+  const search = Array.isArray(params.search)
+    ? params.search[0]
+    : params.search;
+
+  let title = "Shop All Products | Clothing Store";
+  let description =
+    "Browse our extensive collection of high-quality clothing. Find the perfect style for you.";
+
+  if (search) {
+    title = `Search results for "${search}" | Clothing Store`;
+    description = `Search results for "${search}" in our clothing store.`;
+  } else if (category) {
+    title = `${category} Clothing | Clothing Store`;
+    description = `Shop the latest ${category} fashion trends. High-quality ${category} clothing for every occasion.`;
+  }
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      type: "website",
+    },
+    robots: {
+      index: !search, // Don't index search results
+      follow: true,
+    },
+  };
 }
 
 const buildSortQuery = (

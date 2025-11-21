@@ -96,7 +96,14 @@ export default function ProductsClient({
   return (
     <div className="flex-1 space-y-2 sm:space-y-6">
       {/* Category Title */}
-      <h2 className="text-2xl sm:text-3xl font-semibold">All Products</h2>
+      {/* Category Title */}
+      <h2 className="text-2xl sm:text-3xl font-semibold">
+        {searchParams.get("search")
+          ? `Search Results for "${searchParams.get("search")}"`
+          : searchParams.get("category")
+          ? `${searchParams.get("category")} Products`
+          : "All Products"}
+      </h2>
 
       {/* Product Count and Sort */}
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
