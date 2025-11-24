@@ -91,14 +91,14 @@ export default function ProductInfo({ product }: ProductInfoProps) {
   };
 
   return (
-    <div className="flex flex-col space-y-8">
+    <div className="flex flex-col space-y-8 ml-2">
       {/* Header */}
       <div className="space-y-4">
         <h1 className="text-3xl sm:text-4xl lg:text-5xl font-serif font-medium tracking-tight text-foreground uppercase">
           {product.title}
         </h1>
-        <div className="flex items-baseline gap-4">
-          <p className="text-3xl font-semibold text-primary">
+        <div className="flex items-center gap-2 sm:gap-4">
+          <p className="text-2xl sm:text-3xl font-semibold text-primary">
             ₹ {product.price.toLocaleString("en-IN")}
           </p>
           <Badge variant="outline" className="text-xs uppercase tracking-wider">
@@ -113,7 +113,7 @@ export default function ProductInfo({ product }: ProductInfoProps) {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <span className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
-            Color: <span className="text-foreground font-semibold">{selectedColor}</span>
+            Color : <span className="text-foreground font-semibold">{selectedColor}</span>
           </span>
         </div>
         <div className="flex flex-wrap gap-3">
@@ -125,7 +125,7 @@ export default function ProductInfo({ product }: ProductInfoProps) {
                 setSelectedSize("");
               }}
               className={cn(
-                "group relative h-12 px-4 rounded-full border transition-all duration-200 flex items-center gap-2",
+                "group relative sm:h-12 h-8 px-2 sm:px-4 rounded-full border transition-all duration-200 flex items-center gap-2",
                 selectedColor === variant.color
                   ? "border-primary bg-primary/5 ring-1 ring-primary"
                   : "border-input hover:border-primary/50 hover:bg-accent"
@@ -150,14 +150,12 @@ export default function ProductInfo({ product }: ProductInfoProps) {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
-              Size: <span className="text-foreground font-semibold">{selectedSize || "Select"}</span>
+              Size : <span className="text-foreground font-semibold">{selectedSize || "Select"}</span>
             </span>
-            <button className="text-xs underline text-muted-foreground hover:text-primary transition-colors">
-              Size Guide
-            </button>
+            
           </div>
           
-          <div className="grid grid-cols-4 sm:grid-cols-6 gap-3">
+          <div className="flex gap-3">
             {allSizes.map((sizeVariant) => {
               const isSelected = selectedSize === sizeVariant.size;
               const isOutOfStock = sizeVariant.stock === 0;
@@ -169,7 +167,7 @@ export default function ProductInfo({ product }: ProductInfoProps) {
                   onClick={() => setSelectedSize(sizeVariant.size)}
                   disabled={isOutOfStock}
                   className={cn(
-                    "relative h-12 rounded-lg border flex items-center justify-center transition-all duration-200",
+                    "relative   sm:h-12 h-10 w-12 sm:w-14 rounded-lg border flex items-center justify-center transition-all duration-200",
                     isSelected
                       ? "border-primary bg-primary text-primary-foreground shadow-md scale-105"
                       : "border-input hover:border-primary/50 hover:bg-accent",
@@ -207,7 +205,7 @@ export default function ProductInfo({ product }: ProductInfoProps) {
       )}
 
       {/* Actions */}
-      <div className="space-y-4 pt-4">
+      <div className="space-y-4 sm:pt-2 pt-0">
         <Button
           onClick={handleAddToCart}
           disabled={!selectedColor || !selectedSize || selectedSizeStock === 0}

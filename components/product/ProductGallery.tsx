@@ -49,7 +49,7 @@ export default function ProductGallery({ images, title }: ProductGalleryProps) {
   }
 
   return (
-    <div className="flex flex-col gap-4 w-full">
+    <div className="flex flex-col gap-2 w-full">
       {/* Main Carousel */}
       <div className="relative overflow-hidden rounded-xl border bg-background shadow-sm">
         <div className="absolute right-4 top-4 z-10">
@@ -60,7 +60,7 @@ export default function ProductGallery({ images, title }: ProductGalleryProps) {
         <div ref={emblaRef} className="overflow-hidden cursor-grab active:cursor-grabbing">
           <div className="flex touch-pan-y">
             {images.map((src, index) => (
-              <div className="relative flex-[0_0_100%] min-w-0 pl-0 aspect-[3/5] sm:aspect-square" key={index}>
+              <div className="relative flex-[0_0_100%] min-w-0 pl-0 aspect-[1/1] sm:aspect-square" key={index}>
                 <Image
                   src={src}
                   alt={`${title} - View ${index + 1}`}

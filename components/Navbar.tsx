@@ -17,7 +17,8 @@ import { getCartItemCount } from "@/lib/utils/cart";
 import { cn } from "@/lib/utils";
 
 export default function Navbar() {
-  const [isShopDropdownOpen, setIsShopDropdownOpen] = useState(false);
+  const [isDesktopShopOpen, setIsDesktopShopOpen] = useState(false);
+  const [isMobileShopOpen, setIsMobileShopOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [cartCount, setCartCount] = useState(0);
   const [mounted, setMounted] = useState(false);
@@ -30,18 +31,18 @@ export default function Navbar() {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
       if (!target.closest(".shop-dropdown")) {
-        setIsShopDropdownOpen(false);
+        setIsDesktopShopOpen(false);
       }
     };
 
-    if (isShopDropdownOpen) {
+    if (isDesktopShopOpen) {
       document.addEventListener("mousedown", handleClickOutside);
     }
 
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [isShopDropdownOpen]);
+  }, [isDesktopShopOpen]);
 
   // Update cart count
   useEffect(() => {
@@ -150,18 +151,18 @@ export default function Navbar() {
               <div className="relative shop-dropdown">
                 <Button
                   variant="ghost"
-                  onClick={() => setIsShopDropdownOpen(!isShopDropdownOpen)}
+                  onClick={() => setIsDesktopShopOpen(!isDesktopShopOpen)}
                   className="flex items-center gap-1 text-sm text-foreground hover:text-foreground/80 h-auto p-0"
                 >
                   Shop
                   <ChevronDown
                     className={cn(
                       "w-4 h-4 transition-transform",
-                      isShopDropdownOpen && "rotate-180"
+                      isDesktopShopOpen && "rotate-180"
                     )}
                   />
                 </Button>
-                {isShopDropdownOpen && (
+                {isDesktopShopOpen && (
                   <div className="absolute top-full left-0 mt-2 w-48 bg-background border border-border rounded-md shadow-lg py-2 z-50">
                     {categories.length === 0 ? (
                       <span className="block px-4 py-2 text-sm text-muted-foreground">
@@ -174,7 +175,7 @@ export default function Navbar() {
                           href={`/products?category=${encodeURIComponent(
                             category.name
                           )}`}
-                          onClick={() => setIsShopDropdownOpen(false)}
+                          onClick={() => setIsDesktopShopOpen(false)}
                           className="block px-4 py-2 text-sm text-foreground hover:bg-accent transition-colors"
                         >
                           {category.name}
@@ -260,7 +261,7 @@ export default function Navbar() {
                         <Button
                           variant="ghost"
                           onClick={() =>
-                            setIsShopDropdownOpen(!isShopDropdownOpen)
+                            setIsMobileShopOpen(!isMobileShopOpen)
                           }
                           className="flex items-center justify-between w-full text-base font-medium text-foreground h-auto p-0 hover:bg-transparent"
                         >
@@ -268,11 +269,11 @@ export default function Navbar() {
                           <ChevronDown
                             className={cn(
                               "w-4 h-4 transition-transform",
-                              isShopDropdownOpen && "rotate-180"
+                              isMobileShopOpen && "rotate-180"
                             )}
                           />
                         </Button>
-                        {isShopDropdownOpen && (
+                        {isMobileShopOpen && (
                           <div className="mt-2 ml-4 flex flex-col gap-2">
                             {categories.length === 0 ? (
                               <span className="text-sm text-muted-foreground">

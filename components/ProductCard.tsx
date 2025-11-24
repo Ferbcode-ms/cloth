@@ -36,7 +36,7 @@ export default function ProductCard({ product }: ProductCardProps) {
   return (
     <Card className="overflow-hidden border-0 shadow-none bg-transparent">
       <Link href={`/products/${product.slug}`}>
-        <div className="relative h-80 w-full bg-gray-200 rounded-lg overflow-hidden mb-4 hover:scale-105 transition-all duration-300">
+        <div className="relative h-40 sm:h-80 w-full bg-gray-200 rounded-lg overflow-hidden mb-4 hover:scale-105 transition-all duration-300">
           {product.images[0] ? (
             <Image
               src={product.images[0]}
