@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import connectDB from "@/lib/db";
 import Product from "@/lib/models/Product";
 import ProductDetailClient from "@/components/ProductDetailClient";
+import RelatedProducts from "@/components/product/RelatedProducts";
 
 export const revalidate = 3600; // Revalidate every hour
 
@@ -15,6 +16,22 @@ async function getProduct(slug: string) {
   } catch (error) {
     console.error("Error fetching product:", error);
     return null;
+  }
+}
+
+async function getRelatedProducts(category: string, currentProductId: string) {
+  try {
+    await connectDB();
+    const products = await Product.find({
+      category,
+      _id: { $ne: currentProductId },
+    })
+      .limit(4)
+      .lean();
+    return JSON.parse(JSON.stringify(products));
+  } catch (error) {
+    console.error("Error fetching related products:", error);
+    return [];
   }
 }
 
@@ -55,6 +72,8 @@ export default async function ProductDetailPage({
     notFound();
   }
 
+  const relatedProducts = await getRelatedProducts(product.category, product._id);
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Product",
@@ -76,6 +95,7 @@ export default async function ProductDetailPage({
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <ProductDetailClient product={product} />
+      <RelatedProducts products={relatedProducts} />
     </>
   );
 }

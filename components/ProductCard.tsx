@@ -33,21 +33,38 @@ export default function ProductCard({ product }: ProductCardProps) {
       )
     : product.discount;
 
+  const totalStock = product.variants.reduce(
+    (acc, variant) =>
+      acc + variant.sizes.reduce((sAcc, size) => sAcc + size.stock, 0),
+    0
+  );
+
+  const isOutOfStock = totalStock === 0;
+
   return (
-    <Card className="overflow-hidden border-0 shadow-none bg-transparent">
+    <Card className="overflow-hidden border-0 shadow-none bg-transparent group">
       <Link href={`/products/${product.slug}`}>
-        <div className="relative h-40 sm:h-80 w-full bg-gray-200 rounded-lg overflow-hidden mb-4 hover:scale-105 transition-all duration-300">
+        <div className="relative h-40 sm:h-80 w-full bg-gray-200 rounded-lg overflow-hidden mb-4">
           {product.images[0] ? (
             <Image
               src={product.images[0]}
               alt={product.title}
               fill
-              className="object-cover"
+              className={`object-cover transition-transform duration-300 ${
+                isOutOfStock ? "opacity-60 grayscale" : "group-hover:scale-105"
+              }`}
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             />
           ) : (
             <div className="w-full h-full bg-gray-200 flex items-center justify-center">
               <span className="text-textSecondary text-xs">No Image</span>
+            </div>
+          )}
+          {isOutOfStock && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/10">
+              <span className="bg-black/70 text-white px-3 py-1 text-sm font-medium rounded-full backdrop-blur-sm">
+                Out of Stock
+              </span>
             </div>
           )}
         </div>

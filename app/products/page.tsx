@@ -289,6 +289,8 @@ export default async function ProductsPage({
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-20 py-4 sm:py-12 lg:py-16">
       {/* Breadcrumbs */}
+      <div className="flex justify-between sm:items-center sm:flex-row flex-col">
+
       <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4 sm:mb-8">
         <Link href="/" className="hover:text-foreground transition-colors">
           Home
@@ -299,6 +301,7 @@ export default async function ProductsPage({
 
       {/* Search Bar */}
       <ProductsSearchBar initialValue={search} />
+      </div>
 
       {/* Main Layout: Sidebar + Content */}
       <div className="flex flex-col lg:flex-row gap-4 lg:gap-12">

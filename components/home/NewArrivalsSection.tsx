@@ -28,7 +28,7 @@ interface NewArrivalsSectionProps {
 export default function NewArrivalsSection({ newArrivals }: NewArrivalsSectionProps) {
   return (
     <>
-      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-10 mb-8">
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-10 mb-8 sm:px-15">
         {newArrivals.map((product) => (
           <ProductCard key={product._id} product={product} />
         ))}

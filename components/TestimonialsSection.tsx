@@ -62,7 +62,7 @@ function StarRating({ rating }: { rating: number }) {
 
 export default function TestimonialsSection() {
   return (
-    <section className="container mx-auto sm:px-24 px-4 py-16">
+    <section className="container mx-auto px-4 md:px-15 py-16 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-700">
       <Carousel
         opts={{
           align: "start",

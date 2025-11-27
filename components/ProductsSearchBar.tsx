@@ -50,7 +50,7 @@ export default function ProductsSearchBar({
   }, [query, router, serializedParams]);
 
   return (
-    <div className="w-full max-w-xl sm:mb-8 mb-4">
+    <div className=" sm:mb-8 mb-4">
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
         <Input
@@ -58,7 +58,7 @@ export default function ProductsSearchBar({
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           placeholder="Search for products..."
-          className="pl-10 sm:w-1/2 bg-muted/50 border-border"
+          className="pl-10  bg-muted/50 border-border"
           aria-label="Search products"
         />
         {isPending && (
