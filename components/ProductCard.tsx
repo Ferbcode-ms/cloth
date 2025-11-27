@@ -70,14 +70,14 @@ export default function ProductCard({ product }: ProductCardProps) {
         </div>
       </Link>
       <CardContent className="p-0">
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col">
           <Link href={`/products/${product.slug}`}>
-            <h3 className="text-base font-medium text-foreground hover:opacity-80 transition-opacity uppercase">
+            <h3 className="text-sm sm:text-base font-medium text-foreground hover:opacity-80 transition-opacity uppercase truncate">
               {product.title}
             </h3>
           </Link>
           <div className="flex items-center gap-2 flex-wrap">
-            <p className="text-lg font-semibold text-foreground">
+            <p className="text-medium sm:text-lg font-semibold text-foreground">
               ₹ {product.price.toLocaleString("en-IN")}
             </p>
             {hasDiscount && product.originalPrice && (

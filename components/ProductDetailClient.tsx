@@ -18,10 +18,12 @@ interface ProductDetailClientProps {
       sizes: Array<{ size: string; stock: number }>;
     }>;
   };
+  colorMap: Record<string, string>;
 }
 
 export default function ProductDetailClient({
   product,
+  colorMap,
 }: ProductDetailClientProps) {
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -52,7 +54,7 @@ export default function ProductDetailClient({
 
         {/* Product Info */}
         <div className="min-w-0">
-          <ProductInfo product={product} />
+          <ProductInfo product={product} colorMap={colorMap} />
         </div>
       </div>
     </div>

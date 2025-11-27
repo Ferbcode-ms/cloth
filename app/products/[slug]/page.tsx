@@ -60,6 +60,10 @@ export async function generateMetadata({
   };
 }
 
+import Color from "@/lib/models/Color";
+
+// ... existing imports
+
 export default async function ProductDetailPage({
   params,
 }: {
@@ -72,7 +76,17 @@ export default async function ProductDetailPage({
     notFound();
   }
 
-  const relatedProducts = await getRelatedProducts(product.category, product._id);
+  const [relatedProducts, colors] = await Promise.all([
+    getRelatedProducts(product.category, product._id),
+    Color.find().lean(),
+  ]);
+
+  const colorMap = colors.reduce((acc: Record<string, string>, color: any) => {
+    acc[color.name] = color.hex;
+    // Also map by value just in case
+    acc[color.value] = color.hex;
+    return acc;
+  }, {});
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -94,7 +108,7 @@ export default async function ProductDetailPage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <ProductDetailClient product={product} />
+      <ProductDetailClient product={product} colorMap={colorMap} />
       <RelatedProducts products={relatedProducts} />
     </>
   );

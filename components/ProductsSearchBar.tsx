@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Search, Loader2 } from "lucide-react";
+import { Search, Loader2, X } from "lucide-react";
 
 import { Input } from "@/components/ui/input";
 
@@ -27,23 +27,22 @@ export default function ProductsSearchBar({
   useEffect(() => {
     const handler = setTimeout(() => {
       const params = new URLSearchParams(serializedParams);
+      const currentSearch = params.get("search") || "";
+      const newSearch = query.trim();
 
-      if (query.trim()) {
-        params.set("search", query.trim());
-      } else {
-        params.delete("search");
+      if (currentSearch !== newSearch) {
+        if (newSearch) {
+          params.set("search", newSearch);
+        } else {
+          params.delete("search");
+        }
+
+        params.set("page", "1");
+
+        startTransition(() => {
+          router.replace(`/products?${params.toString()}`);
+        });
       }
-
-      params.set("page", "1");
-
-      const next = params.toString();
-      if (next === serializedParams) {
-        return;
-      }
-
-      startTransition(() => {
-        router.replace(`/products?${next}`);
-      });
     }, 350);
 
     return () => clearTimeout(handler);
@@ -58,12 +57,20 @@ export default function ProductsSearchBar({
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           placeholder="Search for products..."
-          className="pl-10  bg-muted/50 border-border"
+          className="pl-10 pr-10 bg-muted/50 border-border"
           aria-label="Search products"
         />
-        {isPending && (
+        {isPending ? (
           <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground animate-spin" />
-        )}
+        ) : query ? (
+          <button
+            onClick={() => setQuery("")}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            aria-label="Clear search"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        ) : null}
       </div>
     </div>
   );

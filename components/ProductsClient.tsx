@@ -130,7 +130,7 @@ export default function ProductsClient({
       </div>
 
       {/* Products Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-4 sm:mt-0">
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 sm:gap-6 gap-4 mt-6 sm:mt-0">
         {products.map((product: any) => (
           <ProductCard key={product._id} product={product} />
         ))}
