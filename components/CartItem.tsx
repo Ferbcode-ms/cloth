@@ -74,17 +74,17 @@ export default function CartItem({ item, maxStock, onUpdate }: CartItemProps) {
         </Alert>
       )}
       <div
-        className={`flex items-center gap-3 sm:gap-6 p-2 sm:p-6 ${
+        className={`flex items-center gap-3 sm:gap-6 p-2 sm:p-6  ${
           isOutOfStock ? "grayscale" : ""
         }`}
       >
-        <div className="relative w-24 h-24 bg-accent">
+        <div className="relative w-20 h-20 bg-accent">
           {item.image ? (
             <Image
               src={item.image}
               alt={item.title}
               fill
-              className="object-cover"
+              className="object-cover rounded-md"
               sizes="96px"
             />
           ) : (
@@ -95,7 +95,7 @@ export default function CartItem({ item, maxStock, onUpdate }: CartItemProps) {
         </div>
         <div className="flex-1 ">
           <h3
-            className={`text-sm font-light mb-1 ${
+            className={`text-sm font-light mb-1 truncate font-medium ${
               isOutOfStock
                 ? "text-muted-foreground line-through"
                 : "text-textPrimary"
@@ -104,14 +104,14 @@ export default function CartItem({ item, maxStock, onUpdate }: CartItemProps) {
             {item.title}
           </h3>
           <p
-            className={`text-xs mb-2 ${
+            className={`text-xs mb-2 truncate ${
               isOutOfStock ? "text-muted-foreground" : "text-textSecondary"
             }`}
           >
             {item.color} - {item.size}
           </p>
           <p
-            className={`text-sm font-light ${
+            className={`text-sm font-medium ${
               isOutOfStock ? "text-muted-foreground" : "text-textPrimary"
             }`}
           >
@@ -151,7 +151,7 @@ export default function CartItem({ item, maxStock, onUpdate }: CartItemProps) {
         </div>
         <div className="text-right">
           <p
-            className={`text-sm font-light mb-2 ${
+            className={`text-sm font-medium mb-2 ${
               isOutOfStock ? "text-muted-foreground" : "text-textPrimary"
             }`}
           >
@@ -159,7 +159,7 @@ export default function CartItem({ item, maxStock, onUpdate }: CartItemProps) {
           </p>
           <button
             onClick={handleRemove}
-            className={`text-xs transition-opacity duration-200 hover:opacity-80 ${
+            className={`text-xs border border-border rounded-md  p-1 transition-opacity duration-200 hover:opacity-80 ${
               isOutOfStock
                 ? "text-destructive hover:text-destructive/80 font-medium"
                 : "text-textSecondary hover:text-textPrimary"

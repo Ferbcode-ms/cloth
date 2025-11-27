@@ -28,10 +28,9 @@ interface ProductInfoProps {
       sizes: Array<{ size: string; stock: number }>;
     }>;
   };
-  colorMap: Record<string, string>;
 }
 
-export default function ProductInfo({ product, colorMap }: ProductInfoProps) {
+export default function ProductInfo({ product }: ProductInfoProps) {
   const [selectedColor, setSelectedColor] = useState(
     product.variants[0]?.color || ""
   );
@@ -130,38 +129,32 @@ export default function ProductInfo({ product, colorMap }: ProductInfoProps) {
           </span>
         </div>
         <div className="flex flex-wrap gap-3">
-          {product.variants.map((variant) => {
-            const colorHex = colorMap[variant.color];
-            return (
-              <button
-                key={variant.color}
-                onClick={() => {
-                  setSelectedColor(variant.color);
-                  setSelectedSize("");
-                  setQuantity(1);
-                }}
-                className={cn(
-                  "group relative h-10 w-10 rounded-full border-2 transition-all duration-200 flex items-center justify-center",
-                  selectedColor === variant.color
-                    ? "border-foreground scale-110"
-                    : "border-border hover:border-foreground/50"
-                )}
-                style={
-                  colorHex
-                    ? { backgroundColor: colorHex }
-                    : { backgroundColor: "#eee" }
-                }
-                title={variant.color}
-              >
-                {selectedColor === variant.color && (
-                  <div className="h-2 w-2 rounded-full bg-white shadow-sm" />
-                )}
-                {!colorHex && (
-                  <span className="text-xs text-black">{variant.color}</span>
-                )}
-              </button>
-            );
-          })}
+          {product.variants.map((variant) => (
+            <button
+              key={variant.color}
+              onClick={() => {
+                setSelectedColor(variant.color);
+                setSelectedSize("");
+                setQuantity(1);
+              }}
+              className={cn(
+                "group relative sm:h-12 h-8 px-2 sm:px-4 rounded-full border transition-all duration-200 flex items-center gap-2",
+                selectedColor === variant.color
+                  ? "border-primary bg-primary/5 ring-1 ring-primary"
+                  : "border-input hover:border-primary/50 hover:bg-accent"
+              )}
+            >
+              {selectedColor === variant.color && (
+                <Check className="h-4 w-4 text-primary animate-in zoom-in" />
+              )}
+              <span className={cn(
+                "text-sm font-medium",
+                selectedColor === variant.color ? "text-primary" : "text-foreground"
+              )}>
+                {variant.color}
+              </span>
+            </button>
+          ))}
         </div>
       </div>
 
