@@ -127,6 +127,8 @@ async function getProducts(
       category: 1,
       subcategory: 1,
       variants: 1,
+      createdAt: 1,
+      orderCount: 1,
     };
 
     if (filters.category) {

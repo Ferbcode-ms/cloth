@@ -3,6 +3,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { TrendingUp, Sparkles } from "lucide-react";
 
 interface ProductCardProps {
   product: {
@@ -16,6 +18,8 @@ interface ProductCardProps {
     slug: string;
     category?: string;
     rating?: number;
+    orderCount?: number;
+    createdAt?: string;
     variants: Array<{
       color: string;
       sizes: Array<{ size: string; stock: number }>;
@@ -41,6 +45,12 @@ export default function ProductCard({ product }: ProductCardProps) {
 
   const isOutOfStock = totalStock === 0;
 
+  // Badge logic
+  const isNew = product.createdAt
+    ? new Date().getTime() - new Date(product.createdAt).getTime() < 30 * 24 * 60 * 60 * 1000
+    : false;
+  const isBestSeller = (product.orderCount || 0) >= 10;
+
   return (
     <Card className="overflow-hidden border-0 shadow-none bg-transparent group">
       <Link href={`/products/${product.slug}`}>
@@ -65,6 +75,25 @@ export default function ProductCard({ product }: ProductCardProps) {
               <span className="bg-black/70 text-white px-3 py-1 text-sm font-medium rounded-full backdrop-blur-sm">
                 Out of Stock
               </span>
+            </div>
+          )}
+
+          {/* Badges */}
+          {!isOutOfStock && (isBestSeller || isNew) && (
+            <div className="absolute sm:top-2 top-1 sm:left-2 left-1 flex flex-col sm:gap-2 gap-1">
+              {isBestSeller && (
+                <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 shadow-lg px-2 py-1 text-xs font-semibold uppercase tracking-wide flex items-center gap-1">
+                  <TrendingUp className="h-3 w-3" />
+                  <span className="hidden sm:inline">Best Seller</span>
+                  <span className="sm:hidden">Best</span>
+                </Badge>
+              )}
+              {isNew && (
+                <Badge className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white border-0 shadow-lg px-1 sm:px-2 sm:py-1 py-0.5 text-xs font-semibold uppercase tracking-wide flex items-center gap-1">
+                  <Sparkles className="sm:h-3 sm:w-3 h-2 w-2" />
+                  New
+                </Badge>
+              )}
             </div>
           )}
         </div>

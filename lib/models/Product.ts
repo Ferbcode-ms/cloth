@@ -19,6 +19,7 @@ export interface IProduct extends Document {
   images: string[];
   variants: IProductVariant[];
   slug: string;
+  orderCount: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -43,6 +44,7 @@ const ProductSchema = new Schema<IProduct>(
     images: [{ type: String, required: true }],
     variants: [ProductVariantSchema],
     slug: { type: String, required: true, unique: true, index: true },
+    orderCount: { type: Number, default: 0, min: 0 },
   },
   {
     timestamps: true,

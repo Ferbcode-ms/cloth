@@ -15,6 +15,8 @@ interface Product {
   slug: string;
   category?: string;
   rating?: number;
+  orderCount?: number;
+  createdAt?: string;
   variants: Array<{
     color: string;
     sizes: Array<{ size: string; stock: number }>;

@@ -190,7 +190,7 @@ const getColorValue = (colorName: string): string => {
                 setQuantity(1);
               }}
               className={cn(
-                "group relative sm:h-10 sm:w-10 h-8 w-8 rounded-full border-2 transition-all duration-200 flex items-center justify-center",
+                "group cursor-pointer relative sm:h-10 sm:w-10 h-8 w-8 rounded-full border-2 transition-all duration-200 flex items-center justify-center",
                 selectedColor === variant.color
                   ? "border-primary ring-2 ring-primary/30 scale-110"
                   : "border-gray-300 dark:border-gray-600 hover:border-primary/50 hover:scale-105"
