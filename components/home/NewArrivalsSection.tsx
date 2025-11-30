@@ -45,7 +45,7 @@ export default function NewArrivalsSection({ newArrivals }: NewArrivalsSectionPr
           <Button
             asChild
             variant="outline"
-            className="rounded-full border-2 border-primary bg-background text-primary hover:bg-primary hover:text-primary-foreground px-8 py-6 text-lg font-medium transition-all duration-300"
+            className="rounded-full border-1 border-primary bg-background text-primary hover:bg-primary hover:text-primary-foreground px-4 py-6 text-md font-medium transition-all duration-300"
           >
             <Link href="/products">View All New Arrivals</Link>
           </Button>

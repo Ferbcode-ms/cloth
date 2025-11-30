@@ -11,6 +11,7 @@ import {
   Tags,
   Palette,
   Ruler,
+  Settings,
 } from "lucide-react";
 import {
   Sidebar,
@@ -54,6 +55,11 @@ const navigation = [
     name: "Orders",
     href: "/admin/orders",
     icon: ShoppingBag,
+  },
+  {
+    name: "Settings",
+    href: "/admin/settings",
+    icon: Settings,
   },
 ];
 

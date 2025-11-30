@@ -8,13 +8,7 @@ export default function BrandBanner() {
           {brands.map((brand, index) => (
             <div
               key={index}
-              className="text-white font-bold text-xl md:text-2xl lg:text-3xl tracking-wide"
-              style={{
-                fontFamily:
-                  brand === "Calvin Klein"
-                    ? "system-ui, -apple-system, sans-serif"
-                    : "serif",
-              }}
+              className="text-white font-bold text-xl md:text-2xl lg:text-3xl tracking-wide uppercase"
             >
               {brand}
             </div>

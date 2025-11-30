@@ -12,8 +12,8 @@ export default function HeroSection() {
 
   return (
     <section className="relative w-full bg-muted/60 overflow-hidden sm:px-15">
-      <div className="container mx-auto px-4 md:px-6 lg:px-8 py-12 md:py-20">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-8 items-center">
+      <div className="container mx-auto px-4 md:px-6 lg:px-8 py-8 md:py-10">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-0 items-center">
           {/* Left Section - Text Content */}
           <div className="relative z-10 animate-in fade-in slide-in-from-bottom-8 duration-700">
             {/* Decorative Star - Top Left */}
@@ -22,7 +22,7 @@ export default function HeroSection() {
             </div>
 
             {/* Headline */}
-            <h1 className="text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-extrabold text-foreground leading-tight mb-6">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold text-foreground leading-tight mb-6">
               FIND CLOTHES
               <br />
               THAT MATCHES
@@ -50,7 +50,7 @@ export default function HeroSection() {
             <div className="flex flex-wrap items-start gap-6 md:gap-8 lg:gap-12">
               {stats.map((stat, index) => (
                 <div key={index} className="flex flex-col relative">
-                  <span className="text-3xl md:text-4xl font-extrabold text-foreground mb-1">
+                  <span className="text-xl md:text-4xl font-bold text-foreground mb-1">
                     {stat.number}
                   </span>
                   <span className="text-sm md:text-base font-medium text-muted-foreground">
@@ -78,8 +78,8 @@ export default function HeroSection() {
                 <div className="relative z-20 w-[280px] sm:w-[320px] md:w-[380px]">
                   <div className="relative aspect-[3/4] rounded-2xl overflow-hidden bg-muted shadow-2xl transform hover:scale-[1.02] transition-transform duration-500">
                     <Image
-                      src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=800&h=1200&fit=crop&q=80"
-                      alt="Woman model"
+                      src="https://images.unsplash.com/photo-1654005018306-7066fc118281?q=80&w=1976&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+                      alt="model"
                       fill
                       className="object-cover"
                       priority

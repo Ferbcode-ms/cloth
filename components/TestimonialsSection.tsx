@@ -71,7 +71,7 @@ export default function TestimonialsSection() {
         className="w-full relative"
       >
         <div className="flex items-center justify-between mb-12">
-          <h2 className="text-3xl ml-4 sm:ml-0 md:text-5xl font-extrabold text-textPrimary uppercase">
+          <h2 className="text-3xl ml-4 sm:ml-0 md:text-5xl font-bold text-textPrimary uppercase">
             OUR HAPPY CUSTOMERS
           </h2>
           <div className="hidden md:flex gap-2">
