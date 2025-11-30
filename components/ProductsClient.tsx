@@ -97,7 +97,7 @@ export default function ProductsClient({
     <div className="flex-1 space-y-2 sm:space-y-6">
       {/* Category Title */}
       {/* Category Title */}
-      <h2 className="text-2xl sm:text-3xl font-semibold">
+      <h2 className="text-2xl sm:text-3xl font-semibold uppercase">
         {searchParams.get("search")
           ? `Search Results for "${searchParams.get("search")}"`
           : searchParams.get("category")

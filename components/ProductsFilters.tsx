@@ -168,7 +168,7 @@ export default function ProductsFilters({
                 <button
                   onClick={() => handleCategorySelect(category)}
                   className={cn(
-                    "w-full flex items-center justify-between text-sm hover:text-foreground transition-colors",
+                    "w-full flex items-center justify-between text-sm hover:text-foreground transition-colors uppercase cursor-pointer hover:translate-x-1 transition-all",
                     selectedCategoryName === category.name
                       ? "text-foreground font-medium"
                       : "text-muted-foreground"
@@ -186,7 +186,7 @@ export default function ProductsFilters({
                           key={sub.slug}
                           onClick={() => handleSubcategorySelect(sub.slug)}
                           className={cn(
-                            "w-full flex items-center justify-between text-xs hover:text-foreground transition-colors",
+                            "w-full flex items-center justify-between text-xs hover:text-foreground transition-colors uppercase cursor-pointer ",
                             selectedSubcategory === sub.slug
                               ? "text-foreground font-medium"
                               : "text-muted-foreground"
@@ -212,13 +212,13 @@ export default function ProductsFilters({
         {colors.length === 0 ? (
           <p className="text-sm text-muted-foreground">Loading colors...</p>
         ) : (
-          <div className="grid grid-cols-5 gap-3">
+          <div className="grid grid-cols-8 ">
             {colors.map((color) => (
               <button
                 key={color._id}
                 onClick={() => toggleColor(color.value)}
                 className={cn(
-                  "relative h-10 w-10 rounded-full border-2 transition-all",
+                  "relative h-8 w-8 rounded-full border-2 transition-all cursor-pointer",
                   selectedColors.includes(color.value)
                     ? "border-foreground scale-110"
                     : "border-border hover:border-foreground/50"
@@ -248,13 +248,13 @@ export default function ProductsFilters({
         {sizes.length === 0 ? (
           <p className="text-sm text-muted-foreground">Loading sizes...</p>
         ) : (
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-3 gap-2 mr-2">
             {sizes.map((size) => (
               <button
                 key={size._id}
                 onClick={() => toggleSize(size.value)}
                 className={cn(
-                  "px-3 py-2 text-sm border rounded-md transition-all",
+                  "px-3 py-2 text-sm border rounded-md transition-all cursor-pointer",
                   selectedSizes.includes(size.value)
                     ? "bg-foreground text-background border-foreground"
                     : "bg-background text-foreground border-border hover:border-foreground/50"

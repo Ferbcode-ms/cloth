@@ -14,7 +14,7 @@ export default async function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className=" antialiased">
+      <body className="antialiased">
         <LayoutWrapper>{children}</LayoutWrapper>
       </body>
     </html>

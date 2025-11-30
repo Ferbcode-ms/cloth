@@ -57,7 +57,59 @@ export default function ProductInfo({ product }: ProductInfoProps) {
         setQuantity((prev) => prev - 1);
       }
     }
+  }
+
+// Helper function to map color names to actual colors
+const getColorValue = (colorName: string): string => {
+  // If it's already a hex color code, use it directly
+  if (colorName.startsWith('#')) {
+    return colorName;
+  }
+  
+  // Check if it's a valid CSS color (rgb, rgba, hsl, etc.)
+  if (colorName.startsWith('rgb') || colorName.startsWith('hsl')) {
+    return colorName;
+  }
+  
+  const colorMap: Record<string, string> = {
+    // Basic colors
+    'black': '#000000',
+    'white': '#FFFFFF',
+    'red': '#EF4444',
+    'blue': '#3B82F6',
+    'green': '#10B981',
+    'yellow': '#F59E0B',
+    'purple': '#A855F7',
+    'pink': '#EC4899',
+    'gray': '#6B7280',
+    'grey': '#6B7280',
+    'orange': '#F97316',
+    'brown': '#92400E',
+    'beige': '#D4C5B9',
+    'navy': '#1E3A8A',
+    'maroon': '#7F1D1D',
+    'olive': '#84CC16',
+    'teal': '#14B8A6',
+    'cyan': '#06B6D4',
+    'indigo': '#6366F1',
+    'violet': '#8B5CF6',
+    'magenta': '#D946EF',
+    'gold': '#EAB308',
+    'silver': '#C0C0C0',
+    'cream': '#FFFDD0',
+    'khaki': '#C3B091',
+    'tan': '#D2B48C',
+    'mint': '#98FF98',
+    'lavender': '#E6E6FA',
+    'coral': '#FF7F50',
+    'peach': '#FFDAB9',
+    'burgundy': '#800020',
+    'charcoal': '#36454F',
   };
+  
+  const normalizedColor = colorName.toLowerCase().trim();
+  return colorMap[normalizedColor] || '#888888'; // Default fallback color
+};;
 
   const handleAddToCart = () => {
     if (!selectedColor || !selectedSize) {
@@ -113,7 +165,7 @@ export default function ProductInfo({ product }: ProductInfoProps) {
           {product.title}
         </h1>
         <div className="flex items-center gap-2 sm:gap-4">
-          <p className="text-2xl sm:text-3xl font-semibold text-primary">
+          <p className="text-2xl sm:text-3xl font-medium text-primary">
             ₹ {product.price.toLocaleString("en-IN")}
           </p>
         </div>
@@ -125,7 +177,7 @@ export default function ProductInfo({ product }: ProductInfoProps) {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <span className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
-            Color : <span className="text-foreground font-semibold">{selectedColor}</span>
+            Color : <span className="text-foreground ">{selectedColor}</span>
           </span>
         </div>
         <div className="flex flex-wrap gap-3">
@@ -138,21 +190,30 @@ export default function ProductInfo({ product }: ProductInfoProps) {
                 setQuantity(1);
               }}
               className={cn(
-                "group relative sm:h-12 h-8 px-2 sm:px-4 rounded-full border transition-all duration-200 flex items-center gap-2",
+                "group relative sm:h-10 sm:w-10 h-8 w-8 rounded-full border-2 transition-all duration-200 flex items-center justify-center",
                 selectedColor === variant.color
-                  ? "border-primary bg-primary/5 ring-1 ring-primary"
-                  : "border-input hover:border-primary/50 hover:bg-accent"
+                  ? "border-primary ring-2 ring-primary/30 scale-110"
+                  : "border-gray-300 dark:border-gray-600 hover:border-primary/50 hover:scale-105"
               )}
+              style={{ 
+                backgroundColor: getColorValue(variant.color),
+                boxShadow: variant.color.toLowerCase() === 'white' 
+                  ? 'inset 0 0 0 1px rgba(0,0,0,0.1)' 
+                  : 'none'
+              }}
+              title={variant.color} // Tooltip shows color name on hover
             >
               {selectedColor === variant.color && (
-                <Check className="h-4 w-4 text-primary animate-in zoom-in" />
+                <Check className="h-5 w-5 text-white drop-shadow-lg animate-in zoom-in" 
+                  style={{
+                    filter: variant.color.toLowerCase() === 'white' || 
+                            variant.color.toLowerCase() === 'yellow' ||
+                            variant.color.toLowerCase() === 'cream'
+                      ? 'drop-shadow(0 0 2px rgba(0,0,0,0.5))' 
+                      : 'drop-shadow(0 0 2px rgba(255,255,255,0.5))'
+                  }}
+                />
               )}
-              <span className={cn(
-                "text-sm font-medium",
-                selectedColor === variant.color ? "text-primary" : "text-foreground"
-              )}>
-                {variant.color}
-              </span>
             </button>
           ))}
         </div>
@@ -163,7 +224,7 @@ export default function ProductInfo({ product }: ProductInfoProps) {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
-              Size : <span className="text-foreground font-semibold uppercase">{selectedSize || "Select"}</span>
+              Size : <span className="text-foreground uppercase">{selectedSize || "Select"}</span>
             </span>
             
           </div>
@@ -175,56 +236,100 @@ export default function ProductInfo({ product }: ProductInfoProps) {
               const isLowStock = sizeVariant.stock > 0 && sizeVariant.stock < 5;
 
               return (
-                <button
-                  key={sizeVariant.size}
-                  onClick={() => {
-                    setSelectedSize(sizeVariant.size);
-                    setQuantity(1);
-                  }}
-                  disabled={isOutOfStock}
-                  className={cn(
-                    "relative   sm:h-12 h-10 w-12 sm:w-14 rounded-lg border flex items-center justify-center transition-all duration-200",
-                    isSelected
-                      ? "border-primary bg-primary text-primary-foreground shadow-md scale-105"
-                      : "border-input hover:border-primary/50 hover:bg-accent",
-                    isOutOfStock && "opacity-40 cursor-not-allowed bg-muted"
+                <div key={sizeVariant.size} className="relative group">
+                  <button
+                    onClick={() => {
+                      setSelectedSize(sizeVariant.size);
+                      setQuantity(1);
+                    }}
+                    disabled={isOutOfStock}
+                    className={cn(
+                      "relative sm:h-10 cursor-pointer h-8 w-10 sm:w-12 rounded-lg border flex items-center justify-center transition-all duration-200",
+                      isSelected
+                        ? "border-primary bg-primary text-primary-foreground shadow-md scale-105"
+                        : "border-input hover:border-primary/50 hover:bg-accent",
+                      isOutOfStock && "opacity-40 cursor-not-allowed bg-muted"
+                    )}
+                  >
+                    <span className={cn(
+                      "text-sm font-medium",
+                      isOutOfStock && "line-through decoration-2"
+                    )}>
+                      {sizeVariant.size}
+                    </span>
+                    {isLowStock && !isOutOfStock && (
+                      <span className="absolute -top-2 -right-2 h-2 w-2 rounded-full bg-destructive animate-pulse" />
+                    )}
+                  </button>
+                  
+                  {/* Out of Stock Tooltip */}
+                  {isOutOfStock && (
+                    <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">
+                      <div className="bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 text-xs font-medium px-2 py-1 rounded whitespace-nowrap shadow-lg">
+                        Out of Stock
+                        <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-gray-900 dark:bg-gray-100 rotate-45" />
+                      </div>
+                    </div>
                   )}
-                >
-                  <span className="text-sm font-medium">{sizeVariant.size}</span>
-                  {isLowStock && !isOutOfStock && (
-                    <span className="absolute -top-2 -right-2 h-2 w-2 rounded-full bg-destructive animate-pulse" />
-                  )}
-                </button>
+                </div>
               );
             })}
           </div>
 
           {/* Stock Alerts */}
           {selectedSizeStock > 0 && selectedSizeStock < 5 && (
-            <Alert className="bg-amber-50 border-amber-200 text-amber-800">
-              <AlertCircle className="h-4 w-4 text-amber-600" />
-              <AlertDescription>
-                Hurry! Only {selectedSizeStock} left in stock.
-              </AlertDescription>
+            <Alert className="relative overflow-hidden border-0 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 shadow-sm animate-in slide-in-from-top-2 duration-300 sm:w-1/2">
+              <div className="absolute inset-0 bg-gradient-to-r from-amber-400/10 to-orange-400/10 animate-pulse" />
+              <div className="relative flex items-start gap-3">
+                <div className="mt-0.5 rounded-full bg-amber-100 dark:bg-amber-900/50 p-1.5">
+                  <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                </div>
+                <AlertDescription className="font-medium text-amber-900 dark:text-amber-200 flex-1">
+                  <span className="block text-sm">
+                    ⚡ Hurry! Only <span className="font-bold text-amber-700 dark:text-amber-300">{selectedSizeStock}</span> left in stock
+                  </span>
+                  <span className="text-xs text-amber-700/80 dark:text-amber-300/80 mt-1 block">
+                    Order now before it's gone!
+                  </span>
+                </AlertDescription>
+              </div>
             </Alert>
           )}
           
           {selectedSize && selectedSizeStock === 0 && (
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>
-                This size is currently out of stock.
-              </AlertDescription>
+            <Alert className="relative overflow-hidden border-0 bg-gradient-to-r from-red-50 to-rose-50 dark:from-red-950/30 dark:to-rose-950/30 shadow-sm animate-in slide-in-from-top-2 duration-300 sm:w-1/2">
+              <div className="relative flex items-start gap-3">
+                <div className="mt-0.5 rounded-full bg-red-100 dark:bg-red-900/50 p-1.5">
+                  <AlertCircle className="h-4 w-4 text-red-600 dark:text-red-400" />
+                </div>
+                <AlertDescription className="font-medium text-red-900 dark:text-red-200 flex-1">
+                  <span className="block text-sm">
+                    😔 This size is currently out of stock
+                  </span>
+                  <span className="text-xs text-red-700/80 dark:text-red-300/80 mt-1 block">
+                    Try selecting a different size or color
+                  </span>
+                </AlertDescription>
+              </div>
             </Alert>
           )}
 
           {/* Variant Out of Stock Alert */}
           {allSizes.every((s) => s.stock === 0) && (
-             <Alert variant="destructive">
-               <AlertCircle className="h-4 w-4" />
-               <AlertDescription>
-                 This color is currently out of stock in all sizes.
-               </AlertDescription>
+             <Alert className="relative overflow-hidden border-0 bg-gradient-to-r from-red-50 to-rose-50 dark:from-red-950/30 dark:to-rose-950/30 shadow-sm animate-in slide-in-from-top-2 duration-300 sm:w-1/2">
+               <div className="relative flex items-start gap-3">
+                 <div className="mt-0.5 rounded-full bg-red-100 dark:bg-red-900/50 p-1.5">
+                   <AlertCircle className="h-4 w-4 text-red-600 dark:text-red-400" />
+                 </div>
+                 <AlertDescription className="font-medium text-red-900 dark:text-red-200 flex-1">
+                   <span className="block text-sm">
+                     😔 This color is currently out of stock in all sizes
+                   </span>
+                   <span className="text-xs text-red-700/80 dark:text-red-300/80 mt-1 block">
+                     Please choose a different color option
+                   </span>
+                 </AlertDescription>
+               </div>
              </Alert>
           )}
         </div>
@@ -235,12 +340,12 @@ export default function ProductInfo({ product }: ProductInfoProps) {
         <span className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
           Quantity
         </span>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 mt-2">
           <div className="flex items-center border rounded-full bg-background">
             <Button
               variant="ghost"
               size="icon"
-              className="h-10 w-10 rounded-l-full hover:bg-muted"
+              className="h-10 w-10 rounded-l-full hover:bg-muted cursor-pointer"
               onClick={() => handleQuantityChange("decrement")}
               disabled={!selectedSize || quantity <= 1}
             >
@@ -252,18 +357,14 @@ export default function ProductInfo({ product }: ProductInfoProps) {
             <Button
               variant="ghost"
               size="icon"
-              className="h-10 w-10 rounded-r-full hover:bg-muted"
+              className="h-10 w-10 rounded-r-full hover:bg-muted cursor-pointer"
               onClick={() => handleQuantityChange("increment")}
               disabled={!selectedSize || quantity >= selectedSizeStock}
             >
               <Plus className="h-4 w-4" />
             </Button>
           </div>
-          {selectedSize && (
-            <span className="text-sm text-muted-foreground">
-              {selectedSizeStock} available
-            </span>
-          )}
+          
         </div>
       </div>
 
@@ -273,7 +374,7 @@ export default function ProductInfo({ product }: ProductInfoProps) {
           onClick={handleAddToCart}
           disabled={!selectedColor || !selectedSize || selectedSizeStock === 0}
           size="lg"
-          className="w-full h-14 text-lg font-semibold rounded-full shadow-lg shadow-primary/20 transition-all hover:shadow-primary/40 hover:scale-[1.01] bg-gradient-to-r from-primary to-primary/90"
+          className="w-full h-14 text-lg font-semibold rounded-full shadow-lg shadow-primary/20 transition-all hover:shadow-primary/40 hover:scale-[1.01] bg-gradient-to-r from-primary to-primary/90 sm:w-1/2 cursor-pointer"
         >
           <ShoppingCart className="mr-2 h-5 w-5" />
           Add to Cart
@@ -304,9 +405,9 @@ export default function ProductInfo({ product }: ProductInfoProps) {
       <Separator />
 
       {/* Description Accordion */}
-      <Accordion type="single" collapsible className="w-full">
+      <Accordion type="single" collapsible className="w-full ">
         <AccordionItem value="description">
-          <AccordionTrigger className="text-base font-medium">Description</AccordionTrigger>
+          <AccordionTrigger className="text-base font-medium uppercase">Description</AccordionTrigger>
           <AccordionContent>
             <div className="prose prose-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
               {product.description}
@@ -314,7 +415,7 @@ export default function ProductInfo({ product }: ProductInfoProps) {
           </AccordionContent>
         </AccordionItem>
         <AccordionItem value="shipping">
-          <AccordionTrigger className="text-base font-medium">Shipping & Returns</AccordionTrigger>
+          <AccordionTrigger className="text-base font-medium uppercase">Shipping & Returns</AccordionTrigger>
           <AccordionContent>
             <p className="text-sm text-muted-foreground">
               Free standard shipping on all orders. Returns accepted within 30 days of delivery.

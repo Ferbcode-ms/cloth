@@ -30,7 +30,7 @@ export default function ProductDetailClient({
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl overflow-x-hidden">
       {/* Breadcrumbs */}
-      <div className="flex items-center gap-2 text-sm text-muted-foreground py-4 sm:py-6">
+      <div className="flex items-center gap-2 text-sm text-muted-foreground py-4 sm:py-6 uppercase">
         <Link href="/" className="hover:text-foreground transition-colors">
           Home
         </Link>

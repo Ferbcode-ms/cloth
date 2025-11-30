@@ -291,7 +291,7 @@ export default async function ProductsPage({
       {/* Breadcrumbs */}
       <div className="flex justify-between sm:items-center sm:flex-row flex-col">
 
-      <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4 sm:mb-8">
+      <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4 sm:mb-8 uppercase">
         <Link href="/" className="hover:text-foreground transition-colors">
           Home
         </Link>
@@ -304,7 +304,7 @@ export default async function ProductsPage({
       </div>
 
       {/* Main Layout: Sidebar + Content */}
-      <div className="flex flex-col lg:flex-row gap-4 lg:gap-12">
+      <div className="flex flex-col lg:flex-row gap-4 lg:gap-12 uppercase">
         {/* Filters Sidebar */}
         <aside className="lg:sticky lg:top-4 lg:h-fit">
           <Suspense fallback={<ProductsFiltersSkeleton />}>
@@ -323,7 +323,7 @@ export default async function ProductsPage({
               <p className="text-muted-foreground">No products found.</p>
               <Link
                 href="/products"
-                className="text-sm text-foreground hover:underline mt-4 inline-block"
+                className="text-sm text-foreground hover:underline mt-4 inline-block uppercase"
               >
                 Clear all filters
               </Link>
