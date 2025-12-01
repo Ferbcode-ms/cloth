@@ -22,6 +22,8 @@ interface ProductInfoProps {
     title: string;
     description: string;
     price: number;
+    originalPrice?: number;
+    discount?: number;
     images: string[];
     variants: Array<{
       color: string;
@@ -168,6 +170,21 @@ const getColorValue = (colorName: string): string => {
           <p className="text-2xl sm:text-3xl font-medium text-primary">
             ₹ {product.price.toLocaleString("en-IN")}
           </p>
+          {product.originalPrice && product.originalPrice > product.price && (
+            <>
+              <p className="text-xl text-muted-foreground line-through">
+                ₹ {product.originalPrice.toLocaleString("en-IN")}
+              </p>
+              <Badge variant="destructive" className="text-sm">
+                {Math.round(
+                  ((product.originalPrice - product.price) /
+                    product.originalPrice) *
+                    100
+                )}
+                % OFF
+              </Badge>
+            </>
+          )}
         </div>
       </div>
 

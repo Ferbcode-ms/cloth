@@ -44,7 +44,7 @@ export async function PUT(
     await connectDB();
     const { id } = await params;
     const body = await request.json();
-    const { name, subcategories, image } = body;
+    const { name, subcategories, image, discount, discountType } = body;
 
     const category = await Category.findById(id);
     if (!category) {
@@ -96,6 +96,14 @@ export async function PUT(
 
     if (image !== undefined) {
       category.image = image || undefined;
+    }
+
+    if (discount !== undefined) {
+      category.discount = discount;
+    }
+
+    if (discountType !== undefined) {
+      category.discountType = discountType;
     }
 
     await category.save();

@@ -30,6 +30,8 @@ interface Product {
     color: string;
     sizes: Array<{ size: string; stock: number }>;
   }>;
+  discount?: number;
+  discountType?: "percentage" | "fixed";
 }
 
 interface AdminProductsClientProps {
@@ -240,6 +242,7 @@ export default function AdminProductsClient({
                     <TableHead className="w-[100px]">Image</TableHead>
                     <TableHead>Title</TableHead>
                     <TableHead>Price</TableHead>
+                    <TableHead>Discount</TableHead>
                     <TableHead>Category</TableHead>
                     <TableHead>Stock</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
@@ -248,7 +251,7 @@ export default function AdminProductsClient({
                 <TableBody>
                   {filteredProducts.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={7} className="h-24 text-center">
+                      <TableCell colSpan={8} className="h-24 text-center">
                         <p className="text-sm text-textSecondary">
                           {searchQuery
                             ? "No products found matching your search."
@@ -289,6 +292,17 @@ export default function AdminProductsClient({
                         </TableCell>
                         <TableCell className="font-medium">
                           ₹{product.price}
+                        </TableCell>
+                        <TableCell>
+                          {product.discount && product.discount > 0 ? (
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                              {product.discountType === "fixed" ? "₹" : ""}
+                              {product.discount}
+                              {product.discountType === "percentage" ? "%" : ""}
+                            </span>
+                          ) : (
+                            <span className="text-muted-foreground text-xs">-</span>
+                          )}
                         </TableCell>
                         <TableCell className="text-textSecondary">
                           {product.category}

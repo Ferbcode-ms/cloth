@@ -50,6 +50,8 @@ export default function ProductForm({
       color: string;
       sizes: Array<{ size: string; stock: number }>;
     }>,
+    discount: 0,
+    discountType: "percentage" as "percentage" | "fixed",
   });
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -99,6 +101,8 @@ export default function ProductForm({
         subcategory: product.subcategory || "",
         images: product.images || [],
         variants: product.variants || [],
+        discount: product.discount || 0,
+        discountType: product.discountType || "percentage",
       });
       // Find and set selected category
       if (product.category) {
@@ -415,6 +419,67 @@ export default function ProductForm({
                     }}
                   />
                 </Field>
+                <Field>
+                  <FieldLabel htmlFor="discount">Discount</FieldLabel>
+                  <div className="flex gap-2">
+                    <Input
+                      id="discount"
+                      type="text"
+                      value={
+                        formData.discount === undefined || isNaN(formData.discount)
+                          ? ""
+                          : formData.discount.toString()
+                      }
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        // Allow only digits and a decimal point
+                        const numericValue = value.replace(/[^0-9.]/g, "");
+                        const numValue =
+                          numericValue === "" ? 0 : parseFloat(numericValue);
+                        setFormData({
+                          ...formData,
+                          discount: isNaN(numValue) ? 0 : numValue,
+                        });
+                      }}
+                      onKeyDown={(e) => {
+                        // Prevent non-numeric keys except backspace, delete, tab, arrow keys and decimal point
+                        if (
+                          !/[0-9.]/.test(e.key) &&
+                          ![
+                            "Backspace",
+                            "Delete",
+                            "Tab",
+                            "ArrowLeft",
+                            "ArrowRight",
+                            "ArrowUp",
+                            "ArrowDown",
+                          ].includes(e.key) &&
+                          !(e.ctrlKey || e.metaKey)
+                        ) {
+                          e.preventDefault();
+                        }
+                      }}
+                      className="flex-1"
+                    />
+                    <Select
+                      value={formData.discountType}
+                      onValueChange={(value) =>
+                        setFormData({ ...formData, discountType: value as "percentage" | "fixed" })
+                      }
+                    >
+                      <SelectTrigger className="w-[120px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="percentage">%</SelectItem>
+                        <SelectItem value="fixed">Fixed</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </Field>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
                 <Field>
                   <FieldLabel htmlFor="category">Category *</FieldLabel>
                   <Select

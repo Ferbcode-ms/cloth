@@ -33,6 +33,8 @@ interface Category {
   slug: string;
   image?: string;
   subcategories: Subcategory[];
+  discount?: number;
+  discountType?: "percentage" | "fixed";
 }
 
 interface AdminCategoriesClientProps {
@@ -53,6 +55,8 @@ export default function AdminCategoriesClient({
     name: "",
     image: "",
     subcategories: [] as Array<{ name: string; slug: string }>,
+    discount: 0,
+    discountType: "percentage",
   });
 
   const [newSubcategory, setNewSubcategory] = useState("");
@@ -144,7 +148,13 @@ export default function AdminCategoriesClient({
           ? "Category updated successfully"
           : "Category created successfully"
       );
-      setFormData({ name: "", image: "", subcategories: [] });
+      setFormData({
+        name: "",
+        image: "",
+        subcategories: [],
+        discount: 0,
+        discountType: "percentage",
+      });
       setShowForm(false);
       setEditingCategory(null);
       await fetchCategories();
@@ -161,6 +171,8 @@ export default function AdminCategoriesClient({
       name: category.name,
       image: category.image || "",
       subcategories: category.subcategories || [],
+      discount: category.discount || 0,
+      discountType: category.discountType || "percentage",
     });
     setShowForm(true);
     setError(null);
@@ -193,7 +205,13 @@ export default function AdminCategoriesClient({
   const handleCancel = () => {
     setShowForm(false);
     setEditingCategory(null);
-    setFormData({ name: "", image: "", subcategories: [] });
+    setFormData({
+      name: "",
+      image: "",
+      subcategories: [],
+      discount: 0,
+      discountType: "percentage",
+    });
     setNewSubcategory("");
     setError(null);
   };
@@ -208,7 +226,13 @@ export default function AdminCategoriesClient({
           onClick={() => {
             setShowForm(true);
             setEditingCategory(null);
-            setFormData({ name: "", image: "", subcategories: [] });
+            setFormData({
+              name: "",
+              image: "",
+              subcategories: [],
+              discount: 0,
+              discountType: "percentage",
+            });
             setError(null);
             setSuccess(null);
           }}
@@ -282,6 +306,65 @@ export default function AdminCategoriesClient({
                   </div>
                 )}
                 <FieldError />
+              </FieldGroup>
+
+              <FieldGroup>
+                <FieldLabel>Discount</FieldLabel>
+                <div className="flex gap-2">
+                  <Input
+                    type="text"
+                    value={
+                      formData.discount === undefined || isNaN(formData.discount)
+                        ? ""
+                        : formData.discount.toString()
+                    }
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      // Allow only digits and a decimal point
+                      const numericValue = value.replace(/[^0-9.]/g, "");
+                      const numValue =
+                        numericValue === "" ? 0 : parseFloat(numericValue);
+                      setFormData({
+                        ...formData,
+                        discount: isNaN(numValue) ? 0 : numValue,
+                      });
+                    }}
+                    onKeyDown={(e) => {
+                      // Prevent non-numeric keys except backspace, delete, tab, arrow keys and decimal point
+                      if (
+                        !/[0-9.]/.test(e.key) &&
+                        ![
+                          "Backspace",
+                          "Delete",
+                          "Tab",
+                          "ArrowLeft",
+                          "ArrowRight",
+                          "ArrowUp",
+                          "ArrowDown",
+                        ].includes(e.key) &&
+                        !(e.ctrlKey || e.metaKey)
+                      ) {
+                        e.preventDefault();
+                      }
+                    }}
+                    className="flex-1"
+                  />
+                  <div className="w-[120px]">
+                    <select
+                      value={formData.discountType}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          discountType: e.target.value as any,
+                        })
+                      }
+                      className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <option value="percentage">%</option>
+                      <option value="fixed">Fixed</option>
+                    </select>
+                  </div>
+                </div>
               </FieldGroup>
 
               <FieldGroup>
@@ -373,6 +456,7 @@ export default function AdminCategoriesClient({
                   <TableHead>Name</TableHead>
                   <TableHead>Slug</TableHead>
                   <TableHead>Image</TableHead>
+                  <TableHead>Discount</TableHead>
                   <TableHead>Subcategories</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
@@ -410,6 +494,17 @@ export default function AdminCategoriesClient({
                           <span className="text-muted-foreground text-xs">
                             No image
                           </span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {category.discount && category.discount > 0 ? (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            {category.discountType === "fixed" ? "₹" : ""}
+                            {category.discount}
+                            {category.discountType === "percentage" ? "%" : ""}
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground text-xs">-</span>
                         )}
                       </TableCell>
                       <TableCell>

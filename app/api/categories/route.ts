@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
 
     await connectDB();
     const body = await request.json();
-    const { name, subcategories, image } = body;
+    const { name, subcategories, image, discount, discountType } = body;
 
     if (!name) {
       return NextResponse.json(
@@ -73,6 +73,8 @@ export async function POST(request: NextRequest) {
       slug,
       image: image || undefined,
       subcategories: processedSubcategories,
+      discount: discount || 0,
+      discountType: discountType || "percentage",
     });
 
     await category.save();

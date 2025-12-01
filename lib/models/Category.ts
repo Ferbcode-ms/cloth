@@ -9,6 +9,8 @@ export interface ICategory extends Document {
   name: string;
   slug: string;
   image?: string; // Optional image URL for category
+  discount?: number;
+  discountType?: "percentage" | "fixed";
   subcategories: ISubcategory[];
   createdAt: Date;
   updatedAt: Date;
@@ -24,6 +26,12 @@ const CategorySchema = new Schema<ICategory>(
     name: { type: String, required: true, unique: true },
     slug: { type: String, required: true, unique: true, index: true },
     image: { type: String, required: false }, // Optional image URL
+    discount: { type: Number, default: 0, min: 0 },
+    discountType: {
+      type: String,
+      enum: ["percentage", "fixed"],
+      default: "percentage",
+    },
     subcategories: [SubcategorySchema],
   },
   {

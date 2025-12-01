@@ -48,6 +48,8 @@ export async function PUT(
       subcategory,
       images,
       variants,
+      discount,
+      discountType,
     } = body;
 
     const product = await Product.findById(id);
@@ -63,6 +65,8 @@ export async function PUT(
       product.subcategory = subcategory || undefined;
     if (images) product.images = images;
     if (variants) product.variants = variants;
+    if (discount !== undefined) product.discount = discount;
+    if (discountType !== undefined) product.discountType = discountType;
 
     await product.save();
 

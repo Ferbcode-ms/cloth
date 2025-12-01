@@ -20,6 +20,8 @@ export interface IProduct extends Document {
   variants: IProductVariant[];
   slug: string;
   orderCount: number;
+  discount?: number;
+  discountType?: "percentage" | "fixed";
   createdAt: Date;
   updatedAt: Date;
 }
@@ -45,6 +47,12 @@ const ProductSchema = new Schema<IProduct>(
     variants: [ProductVariantSchema],
     slug: { type: String, required: true, unique: true, index: true },
     orderCount: { type: Number, default: 0, min: 0 },
+    discount: { type: Number, default: 0, min: 0 },
+    discountType: {
+      type: String,
+      enum: ["percentage", "fixed"],
+      default: "percentage",
+    },
   },
   {
     timestamps: true,
