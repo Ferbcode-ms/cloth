@@ -2,7 +2,7 @@
 
 // import Script from "next/script"; // reCAPTCHA disabled
 import { useState, useEffect } from "react";
-import CheckoutForm from "@/components/CheckoutForm";
+import CheckoutForm from "@/components/cart/CheckoutForm";
 import { getCart, getCartTotal } from "@/lib/utils/cart";
 import {
   Card,

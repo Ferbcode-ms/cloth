@@ -2,11 +2,11 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 
-import ProductsFilters from "@/components/ProductsFilters";
-import ProductsClient from "@/components/ProductsClient";
-import ProductsFiltersSkeleton from "@/components/ProductsFiltersSkeleton";
-import ProductsGridSkeleton from "@/components/ProductsGridSkeleton";
-import ProductsSearchBar from "../../components/ProductsSearchBar";
+import ProductsFilters from "@/components/products/ProductsFilters";
+import ProductsClient from "@/components/products/ProductsClient";
+import ProductsFiltersSkeleton from "@/components/products/ProductsFiltersSkeleton";
+import ProductsGridSkeleton from "@/components/products/ProductsGridSkeleton";
+import ProductsSearchBar from "@/components/products/ProductsSearchBar";
 import connectDB from "@/lib/db";
 import Product from "@/lib/models/Product";
 import Category from "@/lib/models/Category";
@@ -114,7 +114,7 @@ async function getProducts(
   } = {}
 ) {
   try {
-    const limit = 9; // Changed to 9 to match 3x3 grid
+    const limit = 16; // Changed to 9 to match 3x3 grid
     const skip = (page - 1) * limit;
 
     const query: any = {};

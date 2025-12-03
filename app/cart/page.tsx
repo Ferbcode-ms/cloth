@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { getCart, getCartTotal } from "@/lib/utils/cart";
-import CartItem from "@/components/CartItem";
+import CartItem from "@/components/cart/CartItem";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 

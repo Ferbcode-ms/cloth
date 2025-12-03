@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { User, Menu, ChevronDown, ShoppingCart, Package } from "lucide-react";
+import { User, Menu, ChevronDown, ShoppingBag, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -13,7 +13,7 @@ import {
   SheetTitle,
   SheetDescription,
 } from "@/components/ui/sheet";
-import CartIcon from "@/components/CartIcon";
+import CartIcon from "@/components/cart/CartIcon";
 import { getCartItemCount } from "@/lib/utils/cart";
 import { cn } from "@/lib/utils";
 
@@ -121,7 +121,7 @@ export default function Navbar() {
       {bannerSettings.isVisible && (
         <div className="bg-black text-white py-1 px-4 relative overflow-hidden">
           <div className="whitespace-nowrap">
-            <div className="inline-block animate-marquee will-change-transform">
+            <div className="inline-block animate-marquee will-change-transform font-medium">
               <span className="text-sm inline-block">
                 {bannerSettings.text}{" "}
                 <Link
@@ -164,7 +164,7 @@ export default function Navbar() {
       )}
 
       {/* Main Navigation */}
-      <nav className="border-b border-border bg-background sticky top-0 z-50 sm:px-16">
+      <nav className="border-b border-gray-300 bg-background sticky top-0 z-50 sm:px-16">
         <div className="container mx-auto px-4 md:px-6">
           <div className="flex items-center justify-between h-16 md:h-18">
             {/* Logo */}
@@ -182,12 +182,12 @@ export default function Navbar() {
                 <Button
                   variant="ghost"
                   onClick={() => setIsDesktopShopOpen(!isDesktopShopOpen)}
-                  className="flex items-center gap-1 text-sm text-foreground hover:text-foreground/80 h-auto p-0"
+                  className="flex items-center gap-3 text-md font-semibold text-foreground/80 hover:text-foreground hover:text-foreground/80  cursor-pointer h-auto p-0 "
                 >
                   Shop
                   <ChevronDown
                     className={cn(
-                      "w-4 h-4 transition-transform",
+                      "w-4 h-4 transition-transform stroke-3",
                       isDesktopShopOpen && "rotate-180"
                     )}
                   />
@@ -283,7 +283,18 @@ export default function Navbar() {
                 </AnimatePresence>
               </div>
 
-              
+              <Link 
+                href="/about" 
+                className="text-md font-semibold text-foreground/80 hover:text-foreground/80 transition-colors"
+              >
+                About Us
+              </Link>
+              <Link 
+                href="/contact" 
+                className="text-md font-semibold text-foreground/80 hover:text-foreground/80 transition-colors"
+              >
+                Contact
+              </Link>
             </div>
 
             {/* Right Side Icons - Desktop */}
@@ -293,9 +304,9 @@ export default function Navbar() {
                 className="relative hover:opacity-80 transition-opacity"
                 aria-label="Shopping cart"
               >
-                <ShoppingCart className="w-5 h-5 text-foreground" />
+                <ShoppingBag className="w-5 h-5 text-foreground" />
                 {cartCount > 0 && (
-                  <span className="absolute -top-2 -right-2 bg-primary text-primary-foreground text-[10px] w-5 h-5 flex items-center justify-center rounded-full">
+                  <span className="absolute -top-2 -right-2 bg-primary text-primary-foreground text-[10px] w-4 h- 4 flex items-center justify-center rounded-full">
                     {cartCount}
                   </span>
                 )}
@@ -316,10 +327,10 @@ export default function Navbar() {
                 className="relative inline-flex items-center gap-2 text-sm font-medium text-foreground hover:bg-accent transition-colors"
                 aria-label="Shopping cart"
               >
-                <ShoppingCart className="w-4 h-4" />
-                <span>Cart</span>
+                <ShoppingBag className="w-4 h-4" />
+               
                 {cartCount > 0 && (
-                  <span className="absolute -top-2 -right-2 bg-primary text-primary-foreground text-[10px] w-5 h-5 flex items-center justify-center rounded-full">
+                  <span className="absolute -top-2 -right-2 bg-primary text-primary-foreground text-[10px] w-4 h-4 flex items-center justify-center rounded-full">
                     {cartCount}
                   </span>
                 )}
@@ -328,7 +339,7 @@ export default function Navbar() {
               <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
                 <SheetTrigger asChild className="lg:hidden">
                   <Button variant="ghost" size="icon" aria-label="Open menu">
-                    <Menu className="w-6 h-6" />
+                    <Menu className="w-6 h-6 stroke-3" />
                   </Button>
                 </SheetTrigger>
                 <SheetContent
@@ -367,7 +378,7 @@ export default function Navbar() {
                     </motion.div>
 
                     {/* Mobile Navigation Links */}
-                    <div className="flex flex-col gap-4 px-6 py-6 overflow-y-auto">
+                    <div className="flex flex-col gap-4 px-6 py-6 overflow-y-auto ">
                       {/* Shop Dropdown Mobile */}
                       <motion.div
                         initial={{ opacity: 0, x: -20 }}
@@ -380,7 +391,8 @@ export default function Navbar() {
                           onClick={() =>
                             setIsMobileShopOpen(!isMobileShopOpen)
                           }
-                          className="flex items-center justify-between w-full text-base font-semibold text-foreground h-auto p-0 hover:bg-transparent"
+                          className="flex items-center justify-between w-full 
+                          text-lg font-semibold text-foreground h-auto p-0 hover:bg-transparent"
                         >
                           Shop
                           <motion.div
@@ -509,13 +521,48 @@ export default function Navbar() {
                         <SheetClose asChild>
                           <Link
                             href="/admin"
-                            className="flex items-center gap-2 text-base font-semibold text-foreground hover:text-primary transition-colors"
+                            className="flex items-center gap-2 text-lg font-semibold text-foreground hover:text-primary transition-colors"
                           >
                             <User className="w-4 h-4" />
                             Account
                           </Link>
                         </SheetClose>
                       </motion.div>
+
+                      {/* About Link */}
+                      <motion.div
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -20 }}
+                        transition={{ delay: 0.2, duration: 0.2 }}
+                      >
+                        <SheetClose asChild>
+                          <Link
+                            href="/about"
+                            className="flex items-center gap-2 text-lg font-semibold text-foreground hover:text-primary transition-colors"
+                          >
+                            About
+                          </Link>
+                        </SheetClose>
+                      </motion.div>
+
+                      {/* Contact Link */}
+                      <motion.div
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -20 }}
+                        transition={{ delay: 0.25, duration: 0.2 }}
+                      >
+                        <SheetClose asChild>
+                          <Link
+                            href="/contact"
+                            className="flex items-center gap-2 text-lg font-semibold text-foreground hover:text-primary transition-colors"
+                          >
+                            Contact
+                          </Link>
+                        </SheetClose>
+                      </motion.div>
+
                     </div>
                   </motion.div>
                     )}

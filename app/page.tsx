@@ -3,11 +3,11 @@ import { Metadata } from "next";
 import connectDB from "@/lib/db";
 import Product from "@/lib/models/Product";
 import Category from "@/lib/models/Category";
-import ProductCardSkeleton from "@/components/ProductCardSkeleton";
-import CategoryCardSkeleton from "@/components/CategoryCardSkeleton";
-import HeroSection from "@/components/HeroSection";
-import BrandBanner from "@/components/BrandBanner";
-import TestimonialsSection from "@/components/TestimonialsSection";
+import ProductCardSkeleton from "@/components/products/ProductCardSkeleton";
+import CategoryCardSkeleton from "@/components/products/CategoryCardSkeleton";
+import HeroSection from "@/components/home/HeroSection";
+import BrandBanner from "@/components/home/BrandBanner";
+import TestimonialsSection from "@/components/home/TestimonialsSection";
 import CategoriesSection from "@/components/home/CategoriesSection";
 import NewArrivalsSection from "@/components/home/NewArrivalsSection";
 
@@ -167,7 +167,7 @@ export default async function Home() {
       {/* New Arrivals */}
       <section className="w-full bg-muted/60 overflow-hidden">
         <div className="container mx-auto px-4 md:px-6 lg:px-8 py-12 lg:py-16 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-500">
-          <h2 className="text-2xl sm:text-3xl md:text-5xl font-bold mb-8 md:mb-12 text-center text-textPrimary">
+          <h2 className="text-2xl sm:text-3xl md:text-5xl font-bold mb-8 md:mb-12  text-textPrimary">
             NEW ARRIVALS
           </h2>
           <Suspense

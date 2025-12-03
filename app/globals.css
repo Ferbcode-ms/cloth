@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap');
 @import "tailwindcss";
 @import "react-toastify/dist/ReactToastify.css";
 
@@ -6,7 +6,7 @@
 
 body {
   
-  font-family: "monserrat", sans-serif;
+  font-family: "geist", sans-serif;
   
   font-style: normal;
    
@@ -82,7 +82,7 @@ body {
 
 :root {
   --radius: 0.625rem;
-  --background: oklch(1 0 0);
+  --background: rgb(255 255 255 / 1.0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);

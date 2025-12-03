@@ -3,8 +3,8 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
-import ProductGallery from "@/components/product/ProductGallery";
-import ProductInfo from "@/components/product/ProductInfo";
+import ProductGallery from "@/components/products/details/ProductGallery";
+import ProductInfo from "@/components/products/details/ProductInfo";
 
 interface ProductDetailClientProps {
   product: {

@@ -2,8 +2,8 @@ import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import connectDB from "@/lib/db";
 import Product from "@/lib/models/Product";
-import ProductDetailClient from "@/components/ProductDetailClient";
-import RelatedProducts from "@/components/product/RelatedProducts";
+import ProductDetailClient from "@/components/products/ProductDetailClient";
+import RelatedProducts from "@/components/products/details/RelatedProducts";
 
 export const revalidate = 3600; // Revalidate every hour
 

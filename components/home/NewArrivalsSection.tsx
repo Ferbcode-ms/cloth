@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import ProductCard from "@/components/ProductCard";
+import ProductCard from "@/components/products/ProductCard";
 
 interface Product {
   _id: string;
@@ -30,7 +30,7 @@ interface NewArrivalsSectionProps {
 export default function NewArrivalsSection({ newArrivals }: NewArrivalsSectionProps) {
   return (
     <>
-      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-10 mb-8 sm:px-15">
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-10 mb-10 sm:px-15">
         {newArrivals.map((product) => (
           <ProductCard key={product._id} product={product} />
         ))}
@@ -41,13 +41,13 @@ export default function NewArrivalsSection({ newArrivals }: NewArrivalsSectionPr
         </p>
       )}
       {newArrivals.length > 0 && (
-        <div className="flex justify-center">
+        <div className="flex justify-center ">
           <Button
             asChild
             variant="outline"
-            className="rounded-full border-1 border-primary bg-background text-primary hover:bg-primary hover:text-primary-foreground px-4 py-6 text-md font-medium transition-all duration-300"
+            className="rounded-none border-1 border-primary/40 bg-background text-primary hover:bg-primary hover:text-primary-foreground px-6  py-3 shadow-none text-md font-medium transition-all duration-300"
           >
-            <Link href="/products">View All New Arrivals</Link>
+            <Link href="/products">View All </Link>
           </Button>
         </div>
       )}
