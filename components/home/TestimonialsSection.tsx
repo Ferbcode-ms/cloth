@@ -89,11 +89,11 @@ export default function TestimonialsSection() {
                 <CardContent className="p-6">
                   <StarRating rating={testimonial.rating} />
                   <div className="flex items-center gap-2 mb-3">
-                    <h3 className="font-bold text-textPrimary">
+                    <h3 className="font-bold text-textPrimary text-lg">
                       {testimonial.name}
                     </h3>
                   </div>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
+                  <p className="text-sm font-medium text-textPrimary leading-relaxed">
                     {testimonial.text}
                   </p>
                 </CardContent>

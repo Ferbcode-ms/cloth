@@ -64,7 +64,7 @@ export default function CategoriesSection({ categories }: CategoriesSectionProps
           href={`/products?category=${category.name}`}
           className={`${getGridClasses(index, categories.length)} h-full`}
         >
-          <Card className="relative w-full h-full min-h-[250px] md:min-h-[300px] overflow-hidden rounded-xl border-0 bg-white shadow-md hover:shadow-lg transition-shadow duration-300 group">
+          <Card className="relative w-full h-full min-h-[250px] md:min-h-[300px] overflow-hidden rounded-none border-0 bg-transparent shadow-none hover:shadow-none transition-shadow duration-300 group">
             <div className="relative w-full h-full">
               <Image
                 src={getCategoryImage(category)}

@@ -10,19 +10,35 @@ export default function HeroSection() {
     { number: "30,000+", label: "Happy Customers" },
   ];
 
+  const imageUrl = "https://images.unsplash.com/photo-1654005018306-7066fc118281?q=80&w=1976&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D";
+
   return (
-    <section className="relative w-full bg-muted/60 overflow-hidden sm:px-15">
+    <section 
+      className="relative w-full overflow-hidden sm:px-15 lg:bg-muted/60"
+      style={{
+        backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url('${imageUrl}')`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+      }}
+    >
+      {/* Background overlay for mobile only */}
+      <div className="absolute inset-0 bg-black/40 lg:hidden" />
+      
+      {/* Remove background on desktop */}
+      <div className="hidden lg:block absolute inset-0 bg-muted/60" />
+      
       <div className="container mx-auto px-4 md:px-6 lg:px-8 py-8 md:py-10">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-0 items-center">
           {/* Left Section - Text Content */}
           <div className="relative z-10 animate-in fade-in slide-in-from-bottom-8 duration-700">
             {/* Decorative Star - Top Left */}
             <div className="absolute -top-4 -left-4 w-8 h-8 opacity-20">
-              <Sparkles className="w-full h-full text-foreground" />
+              <Sparkles className="w-full h-full text-foreground lg:text-foreground" />
             </div>
 
             {/* Headline */}
-            <h1 className="text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold text-foreground leading-tight mb-6">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold text-white lg:text-foreground leading-tight mb-6">
               FIND CLOTHES
               <br />
               THAT MATCHES
@@ -31,7 +47,7 @@ export default function HeroSection() {
             </h1>
 
             {/* Description */}
-            <p className="text-base md:text-lg font-medium text-muted-foreground mb-8 max-w-lg">
+            <p className="text-base md:text-lg font-medium text-white/90 lg:text-muted-foreground mb-8 max-w-lg">
               Browse through our diverse range of meticulously crafted garments,
               designed to bring out your individuality and cater to your sense
               of style.
@@ -41,7 +57,7 @@ export default function HeroSection() {
             <Button
               asChild
               size="lg"
-              className="bg-foreground text-background hover:bg-foreground/90 rounded-full px-12 py-6 text-base font-medium mb-12 md:mb-10 transition-transform hover:scale-105"
+              className="bg-white text-black hover:bg-white/90 lg:bg-foreground lg:text-background lg:hover:bg-foreground/90 rounded-full px-12 py-6 text-base font-medium mb-12 md:mb-10 transition-transform hover:scale-105"
             >
               <Link href="/products">Shop Now</Link>
             </Button>
@@ -50,10 +66,10 @@ export default function HeroSection() {
             <div className="flex flex-wrap items-start gap-6 md:gap-8 lg:gap-12">
               {stats.map((stat, index) => (
                 <div key={index} className="flex flex-col relative">
-                  <span className="text-xl md:text-4xl font-bold text-foreground mb-1">
+                  <span className="text-xl md:text-4xl font-bold text-white lg:text-foreground mb-1">
                     {stat.number}
                   </span>
-                  <span className="text-sm md:text-base font-medium text-muted-foreground">
+                  <span className="text-sm md:text-base font-medium text-white/80 lg:text-muted-foreground">
                     {stat.label}
                   </span>
                   {index < stats.length - 1 && (
@@ -64,8 +80,8 @@ export default function HeroSection() {
             </div>
           </div>
 
-          {/* Right Section - Models */}
-          <div className="relative lg:h-[600px] flex items-center justify-center animate-in fade-in slide-in-from-right-8 duration-1000 delay-200">
+          {/* Right Section - Models (Desktop only) */}
+          <div className="hidden lg:flex relative lg:h-[600px] items-center justify-center animate-in fade-in slide-in-from-right-8 duration-1000 delay-200">
             {/* Decorative Star - Top Right */}
             <div className="absolute top-8 right-8 w-12 h-12 opacity-20 z-10">
               <Sparkles className="w-full h-full text-foreground" />
@@ -78,7 +94,7 @@ export default function HeroSection() {
                 <div className="relative z-20 w-[280px] sm:w-[320px] md:w-[380px]">
                   <div className="relative aspect-[3/4] rounded-2xl overflow-hidden bg-muted shadow-2xl transform hover:scale-[1.02] transition-transform duration-500">
                     <Image
-                      src="https://images.unsplash.com/photo-1654005018306-7066fc118281?q=80&w=1976&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+                      src={imageUrl}
                       alt="model"
                       fill
                       className="object-cover"

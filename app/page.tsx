@@ -143,7 +143,7 @@ export default async function Home() {
 
       {/* Browse by Category */}
       <section className="container mx-auto px-4 md:px-6 lg:px-8 py-12 lg:py-16 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-300">
-        <div className="bg-muted rounded-4xl p-6 sm:p-8 md:p-12">
+        <div className=" rounded-4xl p-6 sm:p-8 md:p-12">
           <h2 className="text-2xl sm:text-3xl md:text-5xl font-bold mb-6 md:mb-12 text-center text-textPrimary uppercase">
             BROWSE BY CATEGORY
           </h2>
@@ -167,7 +167,7 @@ export default async function Home() {
       {/* New Arrivals */}
       <section className="w-full bg-muted/60 overflow-hidden">
         <div className="container mx-auto px-4 md:px-6 lg:px-8 py-12 lg:py-16 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-500">
-          <h2 className="text-2xl sm:text-3xl md:text-5xl font-bold mb-8 md:mb-12  text-textPrimary">
+          <h2 className="text-2xl sm:text-3xl sm:pl-15 md:text-5xl font-bold mb-8 md:mb-12  text-textPrimary">
             NEW ARRIVALS
           </h2>
           <Suspense
