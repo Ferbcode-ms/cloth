@@ -1,7 +1,15 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Sparkles } from "lucide-react";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+} from "@/components/ui/carousel";
+import Autoplay from "embla-carousel-autoplay";
 
 export default function HeroSection() {
   const stats = [
@@ -10,104 +18,89 @@ export default function HeroSection() {
     { number: "30,000+", label: "Happy Customers" },
   ];
 
-  const imageUrl = "https://images.unsplash.com/photo-1654005018306-7066fc118281?q=80&w=1976&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D";
+  const carouselImages = [
+    {
+      url: "https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=2070&auto=format&fit=crop",
+      alt: "Fashion Collection 1",
+    },
+    {
+      url: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=2070&auto=format&fit=crop",
+      alt: "Fashion Collection 2",
+    },
+    {
+      url: "https://images.unsplash.com/photo-1445205170230-053b83016050?q=80&w=2071&auto=format&fit=crop",
+      alt: "Fashion Collection 3",
+    },
+  ];
 
   return (
-    <section 
-      className="relative w-full overflow-hidden sm:px-15 lg:bg-muted/60"
-      style={{
-        backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url('${imageUrl}')`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat',
-      }}
-    >
-      {/* Background overlay for mobile only */}
-      <div className="absolute inset-0 bg-black/40 lg:hidden" />
-      
-      {/* Remove background on desktop */}
-      <div className="hidden lg:block absolute inset-0 bg-muted/60" />
-      
-      <div className="container mx-auto px-4 md:px-6 lg:px-8 py-8 md:py-10">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-0 items-center">
-          {/* Left Section - Text Content */}
-          <div className="relative z-10 animate-in fade-in slide-in-from-bottom-8 duration-700">
-            {/* Decorative Star - Top Left */}
-            <div className="absolute -top-4 -left-4 w-8 h-8 opacity-20">
-              <Sparkles className="w-full h-full text-foreground lg:text-foreground" />
-            </div>
+    <section className="relative w-full overflow-hidden bg-gradient-to-br from-background via-muted/30 to-background">
+      <div className="w-full px-0">
+        {/* Carousel Section */}
+        <div className="relative w-full animate-in fade-in duration-1000">
+          <Carousel
+            opts={{
+              align: "center",
+              loop: true,
+            }}
+            plugins={[
+              Autoplay({
+                delay: 5000,
+                stopOnInteraction: false,
+              }),
+            ]}
+            className="w-full"
+          >
+            <CarouselContent className="-ml-0">
+              {carouselImages.map((image, index) => (
+                <CarouselItem key={index} className="pl-0">
+                  <div className="relative w-full h-[500px] sm:h-[600px] md:h-[600px] lg:h-[650px] overflow-hidden bg-muted">
+                    <Image
+                      src={image.url}
+                      alt={image.alt}
+                      fill
+                      className="object-cover hover:scale-105 transition-transform duration-700"
+                      priority={index === 0}
+                      sizes="100vw"
+                    />
+                    {/* Gradient overlay for better text contrast if needed */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-black/10" />
+                  </div>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+          </Carousel>
 
+          {/* Text and Shop Now Button Overlay */}
+          <div className="absolute bottom-10 left-10 sm:bottom-20 sm:left-20 z-10 pointer-events-none">
             {/* Headline */}
-            <h1 className="text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold text-white lg:text-foreground leading-tight mb-6">
-              FIND CLOTHES
-              <br />
-              THAT MATCHES
+            <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4 sm:mb-6 animate-in fade-in slide-in-from-bottom-6 duration-700">
+              DISCOVER
               <br />
               YOUR STYLE
-            </h1>
-
-            {/* Description */}
-            <p className="text-base md:text-lg font-medium text-white/90 lg:text-muted-foreground mb-8 max-w-lg">
-              Browse through our diverse range of meticulously crafted garments,
-              designed to bring out your individuality and cater to your sense
-              of style.
+            </h2>
+            
+            {/* Subtext */}
+            <p className="text-base sm:text-lg md:text-xl text-white/90 mb-6 sm:mb-8 max-w-md animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150">
+              Explore our latest collection of premium fashion
             </p>
-
-            {/* Shop Now Button */}
+            
+            {/* Button */}
             <Button
               asChild
               size="lg"
-              className="bg-white text-black hover:bg-white/90 lg:bg-foreground lg:text-background lg:hover:bg-foreground/90 rounded-full px-12 py-6 text-base font-medium mb-12 md:mb-10 transition-transform hover:scale-105"
+              className="pointer-events-auto bg-white text-black hover:bg-white/90 rounded-none sm:px-8 px-6 sm:py-6 py-4 text-lg font-semibold shadow-none transition-all duration-300 hover:scale-110 animate-in fade-in slide-in-from-bottom-4 delay-500"
             >
               <Link href="/products">Shop Now</Link>
             </Button>
-
-            {/* Statistics */}
-            <div className="flex flex-wrap items-start gap-6 md:gap-8 lg:gap-12">
-              {stats.map((stat, index) => (
-                <div key={index} className="flex flex-col relative">
-                  <span className="text-xl md:text-4xl font-bold text-white lg:text-foreground mb-1">
-                    {stat.number}
-                  </span>
-                  <span className="text-sm md:text-base font-medium text-white/80 lg:text-muted-foreground">
-                    {stat.label}
-                  </span>
-                  {index < stats.length - 1 && (
-                    <div className="hidden lg:block absolute right-0 top-0 h-16 w-px bg-border -mr-4 lg:-mr-6" />
-                  )}
-                </div>
-              ))}
-            </div>
           </div>
 
-          {/* Right Section - Models (Desktop only) */}
-          <div className="hidden lg:flex relative lg:h-[600px] items-center justify-center animate-in fade-in slide-in-from-right-8 duration-1000 delay-200">
-            {/* Decorative Star - Top Right */}
-            <div className="absolute top-8 right-8 w-12 h-12 opacity-20 z-10">
-              <Sparkles className="w-full h-full text-foreground" />
-            </div>
-
-            {/* Models Container */}
-            <div className="relative w-full max-w-md lg:max-w-lg xl:max-w-xl my-10 sm:my-0">
-              <div className="relative flex items-center justify-center">
-                {/* Woman Model - Front, Left */}
-                <div className="relative z-20 w-[280px] sm:w-[320px] md:w-[380px]">
-                  <div className="relative aspect-[3/4] rounded-2xl overflow-hidden bg-muted shadow-2xl transform hover:scale-[1.02] transition-transform duration-500">
-                    <Image
-                      src={imageUrl}
-                      alt="model"
-                      fill
-                      className="object-cover"
-                      priority
-                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                    />
-                  </div>
-                </div>
-
-                {/* Man Model - Back, Right */}
-              </div>
-            </div>
-          </div>
+          {/* Left Side Shadow */}
+          <div className="absolute left-0 top-0 bottom-0 w-32 md:w-48 bg-gradient-to-r from-black/40 via-black/20 to-transparent pointer-events-none z-[5]" />
+          
+          {/* Right Side Shadow */}
+          <div className="absolute right-0 top-0 bottom-0 w-32 md:w-48 bg-gradient-to-l from-black/40 via-black/20 to-transparent pointer-events-none z-[5]" />
+       
         </div>
       </div>
     </section>
