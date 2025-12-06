@@ -72,13 +72,13 @@ export default function CheckoutPage() {
 
   if (cart.length === 0) {
     return (
-      <div className="container mx-auto px-4 sm:px-6 py-16 text-center">
-        <div className="max-w-md mx-auto space-y-6">
-          <ShoppingBag className="h-16 w-16 mx-auto text-muted-foreground" />
-          <h1 className="text-3xl sm:text-4xl font-serif font-light text-foreground">
+      <div className="container mx-auto px-4 sm:px-6 py-20 text-center">
+        <div className="max-w-md mx-auto space-y-8">
+          <ShoppingBag className="h-20 w-20 mx-auto text-foreground/30" />
+          <h1 className="text-3xl sm:text-4xl font-medium text-foreground uppercase">
             Your Cart is Empty
           </h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-foreground/60">
             Add some products to checkout!
           </p>
         </div>
@@ -95,40 +95,37 @@ export default function CheckoutPage() {
           strategy="beforeInteractive"
         />
       )} */}
-      <div className="container mx-auto px-4 sm:px-6 lg:px-20 py-8 sm:py-12 lg:py-16">
-        <h1 className="text-3xl sm:text-4xl font-serif font-light mb-8 sm:mb-12 text-foreground">
+      <div className="container mx-auto px-4 py-8 sm:py-12 max-w-7xl">
+        <h1 className="text-3xl sm:text-4xl font-medium mb-8 sm:mb-12 text-foreground uppercase">
           Checkout
         </h1>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-2 lg:gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-16">
           <div className="lg:col-span-2">
             <CheckoutForm recaptchaSiteKey={RECAPTCHA_SITE_KEY} />
           </div>
           <div className="lg:col-span-1">
-            <Card className="sticky top-4">
-              <CardHeader>
-                <CardTitle className="text-xl sm:text-2xl font-serif font-light">
-                  Order Summary
-                </CardTitle>
-                <CardDescription>
-                  Please fill in your details to complete your order. We will
-                  contact you for cash on delivery.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
+            <div className="border rounded-sm p-6 sticky top-8">
+              <h2 className="text-xl sm:text-2xl font-medium mb-2 uppercase">
+                Order Summary
+              </h2>
+              <p className="text-sm text-foreground/60 mb-6">
+                Review your order before checkout
+              </p>
+              <div className="space-y-4">
                 <div className="space-y-3 max-h-[300px] overflow-y-auto">
                   {cart.map((item, index) => (
                     <div
                       key={`${item.productId}-${item.color}-${item.size}-${index}`}
                       className="flex gap-3 pb-3 border-b last:border-0"
                     >
-                      <div className="relative w-16 h-16 shrink-0 bg-muted rounded-md overflow-hidden">
+                      <div className="relative w-20 h-20 sm:w-24 sm:h-24 shrink-0 bg-muted/20 rounded-sm overflow-hidden">
                         {item.image ? (
                           <Image
                             src={item.image}
                             alt={item.title}
                             fill
                             className="object-cover"
-                            sizes="64px"
+                            sizes="96px"
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center">
@@ -139,49 +136,46 @@ export default function CheckoutPage() {
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h3 className="text-sm font-medium text-foreground truncate">
+                        <h3 className="text-sm font-medium text-foreground truncate uppercase">
                           {item.title}
                         </h3>
-                        <p className="text-xs text-muted-foreground">
-                          {item.color} - {item.size}
+                        <p className="text-xs text-foreground/60 uppercase">
+                          {item.color} / {item.size}
                         </p>
-                        <div className="flex items-center justify-between mt-1">
-                          <span className="text-xs text-muted-foreground">
+                        <div className="flex items-center justify-between mt-2">
+                          <span className="text-xs text-foreground/60 uppercase">
                             Qty: {item.quantity}
                           </span>
                           <span className="text-sm font-medium text-foreground">
-                            ₹
-                            {(item.price * item.quantity).toLocaleString(
-                              "en-IN"
-                            )}
+                            ₹{(item.price * item.quantity).toLocaleString("en-IN")}
                           </span>
                         </div>
                       </div>
                     </div>
                   ))}
                 </div>
-                <Separator />
+                <Separator className="my-4" />
                 <div className="space-y-3">
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Subtotal</span>
+                    <span className="text-foreground/60 uppercase">Subtotal</span>
                     <span className="text-foreground font-medium">
                       ₹{total.toLocaleString("en-IN")}
                     </span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Shipping</span>
-                    <span className="text-muted-foreground">Free (COD)</span>
+                    <span className="text-foreground/60 uppercase">Shipping</span>
+                    <span className="text-foreground/60">Free (COD)</span>
                   </div>
-                  <Separator />
+                  <Separator className="my-4" />
                   <div className="flex justify-between text-base font-semibold">
-                    <span className="text-foreground">Total</span>
+                    <span className="text-foreground uppercase">Total</span>
                     <span className="text-foreground">
                       ₹{total.toLocaleString("en-IN")}
                     </span>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </div>
         </div>
       </div>

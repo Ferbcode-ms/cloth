@@ -115,7 +115,7 @@ export default function ProductCard({ product }: ProductCardProps) {
                   ₹{product.originalPrice.toLocaleString("en-IN")}
                 </p>
                 {discountPercent && (
-                  <span className="text-primary border-2 border-primary/40 rounded-none text-xs font-medium px-2 py-0.5 ">
+                  <span className="text-red-600 rounded-none text-xs font-medium px-1 py-0.5 ">
                     -{discountPercent}%
                   </span>
                 )}

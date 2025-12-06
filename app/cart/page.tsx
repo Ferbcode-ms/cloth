@@ -140,16 +140,16 @@ export default function CartPage() {
 
   if (cart.length === 0) {
     return (
-      <div className="container mx-auto px-4 sm:px-6 py-16 text-center">
-        <div className="max-w-md mx-auto space-y-6">
-          <ShoppingBag className="h-16 w-16 mx-auto text-muted-foreground" />
-          <h1 className="text-3xl sm:text-4xl font-serif font-light text-foreground">
+      <div className="container mx-auto px-4 sm:px-6 py-20 text-center">
+        <div className="max-w-md mx-auto space-y-8">
+          <ShoppingBag className="h-20 w-20 mx-auto text-foreground/30" />
+          <h1 className="text-3xl sm:text-4xl font-medium text-foreground uppercase">
             Your Cart is Empty
           </h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-foreground/60">
             Add some products to get started!
           </p>
-          <Button asChild size="lg" className="rounded-full">
+          <Button asChild size="lg" className="rounded bg-foreground text-background hover:opacity-90 uppercase">
             <Link href="/products">
               Continue Shopping
               <ArrowRight className="ml-2 h-4 w-4" />
@@ -161,28 +161,26 @@ export default function CartPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 sm:px-20 py-8 sm:py-12 lg:py-16">
-      <h1 className="text-3xl sm:text-4xl font-serif font-light mb-8 sm:mb-12 text-foreground">
+    <div className="container mx-auto px-4 py-8 sm:py-12 max-w-7xl">
+      <h1 className="text-3xl sm:text-4xl font-medium mb-8 sm:mb-12 text-foreground uppercase">
         Shopping Cart
       </h1>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-16">
         <div className="lg:col-span-2">
-          <Card>
-            <CardContent className="p-0">
-              {cart.map((item, index) => {
-                const maxStock =
-                  productStocks[item.productId]?.[item.color]?.[item.size];
-                return (
-                  <CartItem
-                    key={`${item.productId}-${item.color}-${item.size}-${index}`}
-                    item={item}
-                    maxStock={maxStock}
-                    onUpdate={updateCart}
-                  />
-                );
-              })}
-            </CardContent>
-          </Card>
+          <div className="border rounded-sm">
+            {cart.map((item, index) => {
+              const maxStock =
+                productStocks[item.productId]?.[item.color]?.[item.size];
+              return (
+                <CartItem
+                  key={`${item.productId}-${item.color}-${item.size}-${index}`}
+                  item={item}
+                  maxStock={maxStock}
+                  onUpdate={updateCart}
+                />
+              );
+            })}
+          </div>
           {/* Stock validation warnings */}
           {cart.some((item) => {
             const maxStock =
@@ -192,43 +190,40 @@ export default function CartPage() {
               (maxStock === 0 || item.quantity > maxStock)
             );
           }) && (
-            <Alert variant="destructive" className="mt-4">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>
-                Some items in your cart have stock issues. Please review and
-                update quantities before proceeding to checkout.
-              </AlertDescription>
-            </Alert>
+            <div className="mt-4 text-sm text-red-600 dark:text-red-400 flex items-center gap-2">
+              <AlertCircle className="h-4 w-4 flex-shrink-0" />
+              <span>
+                Some items have stock issues. Please review before checkout.
+              </span>
+            </div>
           )}
         </div>
         <div className="lg:col-span-1">
-          <Card className="sticky top-4">
-            <CardHeader>
-              <CardTitle className="text-xl sm:text-2xl font-serif font-light">
-                Order Summary
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
+          <div className="border rounded-sm p-6 sticky top-8">
+            <h2 className="text-xl sm:text-2xl font-medium mb-6 uppercase">
+              Order Summary
+            </h2>
+            <div className="space-y-4">
               <div className="space-y-3">
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Subtotal</span>
+                  <span className="text-foreground/60 uppercase">Subtotal</span>
                   <span className="text-foreground font-medium">
                     ₹{total.toLocaleString("en-IN")}
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Shipping</span>
-                  <span className="text-muted-foreground">Free (COD)</span>
+                  <span className="text-foreground/60 uppercase">Shipping</span>
+                  <span className="text-foreground/60">Free (COD)</span>
                 </div>
-                <Separator />
+                <Separator className="my-4" />
                 <div className="flex justify-between text-base font-semibold">
-                  <span className="text-foreground">Total</span>
+                  <span className="text-foreground uppercase">Total</span>
                   <span className="text-foreground">
                     ₹{total.toLocaleString("en-IN")}
                   </span>
                 </div>
               </div>
-              <div className="space-y-3 pt-4">
+              <div className="space-y-3 pt-6">
                 {(() => {
                   const hasStockIssues = cart.some((item) => {
                     const maxStock =
@@ -241,7 +236,7 @@ export default function CartPage() {
                   return hasStockIssues ? (
                     <Button
                       size="lg"
-                      className="w-full rounded-full h-12 text-base font-medium"
+                      className="w-full rounded h-12 text-base font-medium bg-foreground/50 text-background uppercase"
                       disabled
                       onClick={() => {
                         toast.error(
@@ -249,17 +244,17 @@ export default function CartPage() {
                         );
                       }}
                     >
-                      <ShoppingBag className="mr-2 h-5 w-5" />
-                      Cannot Checkout - Stock Issues
+                      <ShoppingBag className="mr-2 h-4 w-4" />
+                      Cannot Checkout
                     </Button>
                   ) : (
                     <Button
                       asChild
                       size="lg"
-                      className="w-full rounded-full h-12 text-base font-medium"
+                      className="w-full rounded h-12 text-base font-medium bg-foreground text-background hover:opacity-90 uppercase"
                     >
                       <Link href="/checkout">
-                        <ShoppingBag className="mr-2 h-5 w-5" />
+                        <ShoppingBag className="mr-2 h-4 w-4" />
                         Book Now
                       </Link>
                     </Button>
@@ -268,7 +263,7 @@ export default function CartPage() {
                 <Button
                   asChild
                   variant="outline"
-                  className="w-full rounded-full"
+                  className="w-full rounded uppercase"
                 >
                   <Link href="/products">
                     Continue Shopping
@@ -276,8 +271,8 @@ export default function CartPage() {
                   </Link>
                 </Button>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
       </div>
     </div>

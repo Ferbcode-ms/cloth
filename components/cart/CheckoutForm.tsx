@@ -110,159 +110,148 @@ export default function CheckoutForm({ recaptchaSiteKey }: CheckoutFormProps) {
   };
 
   return (
-    <Card className="">
-      <CardHeader>
-        <CardTitle className="text-xl sm:text-2xl font-light">
-          Delivery Information
-        </CardTitle>
-        <CardDescription>
-          Please provide your details for delivery
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {error && (
-            <Alert variant="destructive">
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
+    <div className="border rounded-sm p-6">
+      <h2 className="text-xl sm:text-2xl font-medium mb-2 uppercase">
+        Delivery Information
+      </h2>
+      <p className="text-sm text-foreground/60 mb-6">
+        Please provide your details for delivery
+      </p>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {error && (
+          <div className="text-sm text-red-600 dark:text-red-400 flex items-center gap-2">
+            <span>{error}</span>
+          </div>
+        )}
 
-          <FieldGroup>
+        <FieldGroup>
+          <Field>
+            <FieldLabel htmlFor="name" className="uppercase text-xs">
+              Full Name *
+            </FieldLabel>
+            <Input
+              type="text"
+              id="name"
+              name="name"
+              required
+              value={formData.name}
+              onChange={handleChange}
+              placeholder="Enter your full name"
+            />
+          </Field>
+
+          <Field>
+            <FieldLabel htmlFor="phone" className="uppercase text-xs">
+              Phone Number *
+            </FieldLabel>
+            <Input
+              type="tel"
+              id="phone"
+              name="phone"
+              required
+              value={formData.phone}
+              onChange={handleChange}
+              placeholder="Enter your phone number"
+            />
+          </Field>
+
+          <Field>
+            <FieldLabel htmlFor="email" className="uppercase text-xs">
+              Email (Optional)
+            </FieldLabel>
+            <Input
+              type="email"
+              id="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              placeholder="Enter your email address"
+            />
+          </Field>
+
+          <Field>
+            <FieldLabel htmlFor="address" className="uppercase text-xs">
+              Delivery Address *
+            </FieldLabel>
+            <textarea
+              id="address"
+              name="address"
+              required
+              value={formData.address}
+              onChange={handleChange}
+              rows={3}
+              className="flex min-h-[80px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-base shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+              placeholder="Enter your complete delivery address"
+            />
+          </Field>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field>
-              <FieldLabel htmlFor="name">
-                <User className="h-4 w-4 mr-2 inline" />
-                Full Name *
+              <FieldLabel htmlFor="city" className="uppercase text-xs">
+                City *
               </FieldLabel>
               <Input
                 type="text"
-                id="name"
-                name="name"
+                id="city"
+                name="city"
                 required
-                value={formData.name}
+                value={formData.city}
                 onChange={handleChange}
-                placeholder="Enter your full name"
+                placeholder="Enter city"
               />
             </Field>
 
             <Field>
-              <FieldLabel htmlFor="phone">
-                <Phone className="h-4 w-4 mr-2 inline" />
-                Phone Number *
-              </FieldLabel>
-              <Input
-                type="tel"
-                id="phone"
-                name="phone"
-                required
-                value={formData.phone}
-                onChange={handleChange}
-                placeholder="Enter your phone number"
-              />
-            </Field>
-
-            <Field>
-              <FieldLabel htmlFor="email">
-                <Mail className="h-4 w-4 mr-2 inline" />
-                Email (Optional)
-              </FieldLabel>
-              <Input
-                type="email"
-                id="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                placeholder="Enter your email address"
-              />
-            </Field>
-
-            <Field>
-              <FieldLabel htmlFor="address">
-                <MapPin className="h-4 w-4 mr-2 inline" />
-                Delivery Address *
-              </FieldLabel>
-              <textarea
-                id="address"
-                name="address"
-                required
-                value={formData.address}
-                onChange={handleChange}
-                rows={3}
-                className="flex min-h-[80px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-base shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
-                placeholder="Enter your complete delivery address"
-              />
-            </Field>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Field>
-                <FieldLabel htmlFor="city">
-                  <Building2 className="h-4 w-4 mr-2 inline" />
-                  City *
-                </FieldLabel>
-                <Input
-                  type="text"
-                  id="city"
-                  name="city"
-                  required
-                  value={formData.city}
-                  onChange={handleChange}
-                  placeholder="Enter city"
-                />
-              </Field>
-
-              <Field>
-                <FieldLabel htmlFor="state">
-                  <Building2 className="h-4 w-4 mr-2 inline" />
-                  State *
-                </FieldLabel>
-                <Input
-                  type="text"
-                  id="state"
-                  name="state"
-                  required
-                  value={formData.state}
-                  onChange={handleChange}
-                  placeholder="Enter state"
-                />
-              </Field>
-            </div>
-
-            <Field>
-              <FieldLabel htmlFor="pincode">
-                <Hash className="h-4 w-4 mr-2 inline" />
-                Pincode *
+              <FieldLabel htmlFor="state" className="uppercase text-xs">
+                State *
               </FieldLabel>
               <Input
                 type="text"
-                id="pincode"
-                name="pincode"
+                id="state"
+                name="state"
                 required
-                value={formData.pincode}
+                value={formData.state}
                 onChange={handleChange}
-                placeholder="Enter pincode"
-                maxLength={6}
+                placeholder="Enter state"
               />
             </Field>
+          </div>
 
-            <div className="pt-4">
-              <Button
-                type="submit"
-                disabled={loading}
-                size="lg"
-                className="w-full rounded-full h-12 text-base font-medium"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                    Placing Order...
-                  </>
-                ) : (
-                  "Place Order (COD)"
-                )}
-              </Button>
-            </div>
-          </FieldGroup>
-        </form>
-      </CardContent>
-    </Card>
+          <Field>
+            <FieldLabel htmlFor="pincode" className="uppercase text-xs">
+              Pincode *
+            </FieldLabel>
+            <Input
+              type="text"
+              id="pincode"
+              name="pincode"
+              required
+              value={formData.pincode}
+              onChange={handleChange}
+              placeholder="Enter pincode"
+              maxLength={6}
+            />
+          </Field>
+
+          <div className="pt-6">
+            <Button
+              type="submit"
+              disabled={loading}
+              size="lg"
+              className="w-full rounded h-12 text-base font-medium bg-foreground text-background hover:opacity-90 uppercase"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Placing Order...
+                </>
+              ) : (
+                "Place Order (COD)"
+              )}
+            </Button>
+          </div>
+        </FieldGroup>
+      </form>
+    </div>
   );
 }

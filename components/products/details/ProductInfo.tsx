@@ -160,29 +160,29 @@ const getColorValue = (colorName: string): string => {
   };
 
   return (
-    <div className="flex flex-col space-y-8 ml-2">
+    <div className="flex flex-col space-y-6 uppercase">
       {/* Header */}
-      <div className="space-y-4">
-        <h1 className="text-xl sm:text-2xl lg:text-3xl font-medium tracking-tight text-foreground uppercase">
+      <div className="space-y-3">
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-medium uppercase tracking-tight text-foreground">
           {product.title}
         </h1>
-        <div className="flex items-center gap-2 sm:gap-4">
-          <p className="text-2xl sm:text-3xl font-medium text-primary">
-            ₹ {product.price.toLocaleString("en-IN")}
+        <div className="flex items-baseline gap-3">
+          <p className="text-3xl sm:text-4xl font-light text-foreground">
+            ₹{product.price.toLocaleString("en-IN")}
           </p>
           {product.originalPrice && product.originalPrice > product.price && (
             <>
-              <p className="text-xl text-muted-foreground line-through">
-                ₹ {product.originalPrice.toLocaleString("en-IN")}
+              <p className="text-lg text-muted-foreground/60 line-through">
+                ₹{product.originalPrice.toLocaleString("en-IN")}
               </p>
-              <Badge variant="destructive" className="text-sm">
+              <span className="text-sm font-medium text-red-600 dark:text-red-400">
                 {Math.round(
                   ((product.originalPrice - product.price) /
                     product.originalPrice) *
                     100
                 )}
                 % OFF
-              </Badge>
+              </span>
             </>
           )}
         </div>
@@ -191,13 +191,11 @@ const getColorValue = (colorName: string): string => {
       <Separator />
 
       {/* Color Selection */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <span className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
-            Color : <span className="text-foreground ">{selectedColor}</span>
-          </span>
-        </div>
-        <div className="flex flex-wrap gap-3">
+      <div className="space-y-3">
+        <label className="text-sm font-normal text-foreground/70">
+          Color: <span className="text-foreground font-medium">{selectedColor}</span>
+        </label>
+        <div className="flex flex-wrap gap-2">
           {product.variants.map((variant) => (
             <button
               key={variant.color}
@@ -207,10 +205,10 @@ const getColorValue = (colorName: string): string => {
                 setQuantity(1);
               }}
               className={cn(
-                "group cursor-pointer relative sm:h-10 sm:w-10 h-8 w-8 rounded-full border-2 transition-all duration-200 flex items-center justify-center",
+                "group relative mt-2 h-11 w-11 rounded-sm border transition-all duration-200 flex items-center justify-center",
                 selectedColor === variant.color
-                  ? "border-primary ring-2 ring-primary/30 scale-110"
-                  : "border-gray-300 dark:border-gray-600 hover:border-primary/50 hover:scale-105"
+                  ? "border-foreground ring-1 ring-offset-2 ring-foreground scale-105"
+                  : "border-border hover:border-foreground/50 hover:scale-105"
               )}
               style={{ 
                 backgroundColor: getColorValue(variant.color),
@@ -218,10 +216,10 @@ const getColorValue = (colorName: string): string => {
                   ? 'inset 0 0 0 1px rgba(0,0,0,0.1)' 
                   : 'none'
               }}
-              title={variant.color} // Tooltip shows color name on hover
+              title={variant.color}
             >
               {selectedColor === variant.color && (
-                <Check className="h-5 w-5 text-white drop-shadow-lg animate-in zoom-in" 
+                <Check className="h-4 w-4 text-white drop-shadow-lg" 
                   style={{
                     filter: variant.color.toLowerCase() === 'white' || 
                             variant.color.toLowerCase() === 'yellow' ||
@@ -238,15 +236,12 @@ const getColorValue = (colorName: string): string => {
 
       {/* Size Selection */}
       {selectedVariant && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
-              Size : <span className="text-foreground uppercase">{selectedSize || "Select"}</span>
-            </span>
-            
-          </div>
+        <div className="space-y-3">
+          <label className="text-sm font-normal text-foreground/70">
+            Size: <span className="text-foreground font-medium">{selectedSize || "Select a size"}</span>
+          </label>
           
-          <div className="flex gap-3">
+          <div className="flex gap-2 mt-2">
             {allSizes.map((sizeVariant) => {
               const isSelected = selectedSize === sizeVariant.size;
               const isOutOfStock = sizeVariant.stock === 0;
@@ -261,30 +256,30 @@ const getColorValue = (colorName: string): string => {
                     }}
                     disabled={isOutOfStock}
                     className={cn(
-                      "relative sm:h-10 cursor-pointer h-8 w-10 sm:w-12 rounded-lg border flex items-center justify-center transition-all duration-200",
+                      "relative h-11 w-14 rounded border transition-all duration-200 flex items-center justify-center",
                       isSelected
-                        ? "border-primary bg-primary text-primary-foreground shadow-md scale-105"
-                        : "border-input hover:border-primary/50 hover:bg-accent",
-                      isOutOfStock && "opacity-40 cursor-not-allowed bg-muted"
+                        ? "border-foreground bg-foreground text-background"
+                        : "border-border hover:border-foreground/50",
+                      isOutOfStock && "opacity-30 cursor-not-allowed"
                     )}
                   >
                     <span className={cn(
                       "text-sm font-medium",
-                      isOutOfStock && "line-through decoration-2"
+                      isOutOfStock && "line-through"
                     )}>
                       {sizeVariant.size}
                     </span>
                     {isLowStock && !isOutOfStock && (
-                      <span className="absolute -top-2 -right-2 h-2 w-2 rounded-full bg-destructive animate-pulse" />
+                      <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-red-500" />
                     )}
                   </button>
                   
                   {/* Out of Stock Tooltip */}
                   {isOutOfStock && (
                     <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">
-                      <div className="bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 text-xs font-medium px-2 py-1 rounded whitespace-nowrap shadow-lg">
+                      <div className="bg-foreground text-background text-xs font-medium px-2 py-1 rounded whitespace-nowrap">
                         Out of Stock
-                        <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-gray-900 dark:bg-gray-100 rotate-45" />
+                        <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-foreground rotate-45" />
                       </div>
                     </div>
                   )}
@@ -295,146 +290,101 @@ const getColorValue = (colorName: string): string => {
 
           {/* Stock Alerts */}
           {selectedSizeStock > 0 && selectedSizeStock < 5 && (
-            <Alert className="relative overflow-hidden border-0 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 shadow-sm animate-in slide-in-from-top-2 duration-300 sm:w-1/2">
-              <div className="absolute inset-0 bg-gradient-to-r from-amber-400/10 to-orange-400/10 animate-pulse" />
-              <div className="relative flex items-start gap-3">
-                <div className="mt-0.5 rounded-full bg-amber-100 dark:bg-amber-900/50 p-1.5">
-                  <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-                </div>
-                <AlertDescription className="font-medium text-amber-900 dark:text-amber-200 flex-1">
-                  <span className="block text-sm">
-                    ⚡ Hurry! Only <span className="font-bold text-amber-700 dark:text-amber-300">{selectedSizeStock}</span> left in stock
-                  </span>
-                  <span className="text-xs text-amber-700/80 dark:text-amber-300/80 mt-1 block">
-                    Order now before it's gone!
-                  </span>
-                </AlertDescription>
-              </div>
-            </Alert>
+            <div className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1.5 mt-2">
+              <AlertCircle className="h-3.5 w-3.5" />
+              Only {selectedSizeStock} left in stock
+            </div>
           )}
           
           {selectedSize && selectedSizeStock === 0 && (
-            <Alert className="relative overflow-hidden border-0 bg-gradient-to-r from-red-50 to-rose-50 dark:from-red-950/30 dark:to-rose-950/30 shadow-sm animate-in slide-in-from-top-2 duration-300 sm:w-1/2">
-              <div className="relative flex items-start gap-3">
-                <div className="mt-0.5 rounded-full bg-red-100 dark:bg-red-900/50 p-1.5">
-                  <AlertCircle className="h-4 w-4 text-red-600 dark:text-red-400" />
-                </div>
-                <AlertDescription className="font-medium text-red-900 dark:text-red-200 flex-1">
-                  <span className="block text-sm">
-                    😔 This size is currently out of stock
-                  </span>
-                  <span className="text-xs text-red-700/80 dark:text-red-300/80 mt-1 block">
-                    Try selecting a different size or color
-                  </span>
-                </AlertDescription>
-              </div>
-            </Alert>
+            <div className="text-xs text-red-600 dark:text-red-400 flex items-center gap-1.5 mt-2">
+              <AlertCircle className="h-3.5 w-3.5" />
+              This size is out of stock
+            </div>
           )}
 
           {/* Variant Out of Stock Alert */}
           {allSizes.every((s) => s.stock === 0) && (
-             <Alert className="relative overflow-hidden border-0 bg-gradient-to-r from-red-50 to-rose-50 dark:from-red-950/30 dark:to-rose-950/30 shadow-sm animate-in slide-in-from-top-2 duration-300 sm:w-1/2">
-               <div className="relative flex items-start gap-3">
-                 <div className="mt-0.5 rounded-full bg-red-100 dark:bg-red-900/50 p-1.5">
-                   <AlertCircle className="h-4 w-4 text-red-600 dark:text-red-400" />
-                 </div>
-                 <AlertDescription className="font-medium text-red-900 dark:text-red-200 flex-1">
-                   <span className="block text-sm">
-                     😔 This color is currently out of stock in all sizes
-                   </span>
-                   <span className="text-xs text-red-700/80 dark:text-red-300/80 mt-1 block">
-                     Please choose a different color option
-                   </span>
-                 </AlertDescription>
-               </div>
-             </Alert>
+            <div className="text-xs text-red-600 dark:text-red-400 flex items-center gap-1.5 mt-2">
+              <AlertCircle className="h-3.5 w-3.5" />
+              This color is out of stock in all sizes
+            </div>
           )}
         </div>
       )}
 
       {/* Quantity Selector */}
-      <div className="space-y-4">
-        <span className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
-          Quantity
-        </span>
-        <div className="flex items-center gap-4 mt-2">
-          <div className="flex items-center border rounded-full bg-background">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-10 w-10 rounded-l-full hover:bg-muted cursor-pointer"
-              onClick={() => handleQuantityChange("decrement")}
-              disabled={!selectedSize || quantity <= 1}
-            >
-              <Minus className="h-4 w-4" />
-            </Button>
-            <span className="w-12 text-center font-medium text-lg">
-              {quantity}
-            </span>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-10 w-10 rounded-r-full hover:bg-muted cursor-pointer"
-              onClick={() => handleQuantityChange("increment")}
-              disabled={!selectedSize || quantity >= selectedSizeStock}
-            >
-              <Plus className="h-4 w-4" />
-            </Button>
-          </div>
-          
+      <div className="space-y-3">
+        <label className="text-sm font-normal text-foreground/70">Quantity</label>
+        <div className="flex items-center border rounded w-fit">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-11 w-11 hover:bg-muted"
+            onClick={() => handleQuantityChange("decrement")}
+            disabled={!selectedSize || quantity <= 1}
+          >
+            <Minus className="h-4 w-4" />
+          </Button>
+          <span className="w-12 text-center font-medium">
+            {quantity}
+          </span>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-11 w-11 hover:bg-muted"
+            onClick={() => handleQuantityChange("increment")}
+            disabled={!selectedSize || quantity >= selectedSizeStock}
+          >
+            <Plus className="h-4 w-4" />
+          </Button>
         </div>
       </div>
 
       {/* Actions */}
-      <div className="space-y-4 sm:pt-2 pt-0">
+      <div className="space-y-6 pt-4">
         <Button
           onClick={handleAddToCart}
           disabled={!selectedColor || !selectedSize || selectedSizeStock === 0}
           size="lg"
-          className="w-full h-14 text-lg font-semibold rounded-full shadow-lg shadow-primary/20 transition-all hover:shadow-primary/40 hover:scale-[1.01] bg-gradient-to-r from-primary to-primary/90 sm:w-1/2 cursor-pointer"
+          className="w-full h-12 text-base font-medium rounded transition-all hover:opacity-90 bg-foreground text-background uppercase"
         >
-          <ShoppingCart className="mr-2 h-5 w-5" />
+          <ShoppingCart className="mr-2 h-4 w-4" />
           Add to Cart
         </Button>
         
-        <div className="grid grid-cols-3 gap-4 pt-6 text-center">
-          <div className="flex flex-col items-center gap-2 text-muted-foreground group cursor-help">
-            <div className="p-3 rounded-full bg-muted/50 group-hover:bg-primary/10 transition-colors">
-              <Truck className="h-5 w-5 group-hover:text-primary transition-colors" />
-            </div>
-            <span className="text-xs font-medium">Free Shipping</span>
+        <div className="grid grid-cols-3 gap-6 pt-2 border-t">
+          <div className="flex flex-col items-center gap-2 text-center">
+            <Truck className="h-5 w-5 text-foreground/60" />
+            <span className="text-xs text-foreground/60">Free Shipping</span>
           </div>
-          <div className="flex flex-col items-center gap-2 text-muted-foreground group cursor-help">
-            <div className="p-3 rounded-full bg-muted/50 group-hover:bg-primary/10 transition-colors">
-              <ShieldCheck className="h-5 w-5 group-hover:text-primary transition-colors" />
-            </div>
-            <span className="text-xs font-medium">Secure Checkout</span>
+          <div className="flex flex-col items-center gap-2 text-center">
+            <ShieldCheck className="h-5 w-5 text-foreground/60" />
+            <span className="text-xs text-foreground/60">Secure Checkout</span>
           </div>
-          <div className="flex flex-col items-center gap-2 text-muted-foreground group cursor-help">
-            <div className="p-3 rounded-full bg-muted/50 group-hover:bg-primary/10 transition-colors">
-              <RefreshCw className="h-5 w-5 group-hover:text-primary transition-colors" />
-            </div>
-            <span className="text-xs font-medium">Easy Returns</span>
+          <div className="flex flex-col items-center gap-2 text-center">
+            <RefreshCw className="h-5 w-5 text-foreground/60" />
+            <span className="text-xs text-foreground/60">Easy Returns</span>
           </div>
         </div>
       </div>
 
-      <Separator />
+      <Separator className="my-6" />
 
       {/* Description Accordion */}
-      <Accordion type="single" collapsible className="w-full ">
-        <AccordionItem value="description">
-          <AccordionTrigger className="text-base font-medium uppercase">Description</AccordionTrigger>
+      <Accordion type="single" collapsible className="w-full">
+        <AccordionItem value="description" className="border-none">
+          <AccordionTrigger className="text-sm font-normal hover:no-underline py-3 uppercase">Description</AccordionTrigger>
           <AccordionContent>
-            <div className="prose prose-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
+            <div className="text-sm text-foreground/70 leading-relaxed whitespace-pre-wrap pt-1">
               {product.description}
             </div>
           </AccordionContent>
         </AccordionItem>
-        <AccordionItem value="shipping">
-          <AccordionTrigger className="text-base font-medium uppercase">Shipping & Returns</AccordionTrigger>
+        <AccordionItem value="shipping" className="border-none">
+          <AccordionTrigger className="text-sm font-normal hover:no-underline py-3 uppercase">Shipping & Returns</AccordionTrigger>
           <AccordionContent>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-foreground/70 pt-1">
               Free standard shipping on all orders. Returns accepted within 30 days of delivery.
             </p>
           </AccordionContent>

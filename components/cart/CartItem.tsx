@@ -2,8 +2,7 @@
 
 import Image from "next/image";
 import { toast } from "react-toastify";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Trash2 } from "lucide-react";
 import { updateCartItemQuantity, removeFromCart } from "@/lib/utils/cart";
 
 interface CartItemProps {
@@ -60,112 +59,125 @@ export default function CartItem({ item, maxStock, onUpdate }: CartItemProps) {
   return (
     <div
       className={`border-b border-border last:border-b-0 ${
-        isOutOfStock ? "bg-muted/30 opacity-60" : ""
+        isOutOfStock ? "bg-muted/20" : ""
       }`}
     >
-      {hasStockIssue && (
-        <Alert variant="destructive" className="m-4 mb-0 w-1/2">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            {isOutOfStock
-              ? "This item is out of stock. Please remove it from your cart."
-              : `Only ${maxStock} item(s) available. You have ${item.quantity} in cart.`}
-          </AlertDescription>
-        </Alert>
-      )}
       <div
-        className={`flex items-center gap-3 sm:gap-6 p-2 sm:p-6  ${
-          isOutOfStock ? "grayscale" : ""
+        className={`flex items-start gap-4 sm:gap-6 p-4 sm:p-6 ${
+          isOutOfStock ? "opacity-60" : ""
         }`}
       >
-        <div className="relative w-20 h-20 bg-accent">
+        {/* Product Image */}
+        <div className={`relative w-24 h-24 sm:w-28 sm:h-28 flex-shrink-0 bg-muted/20 rounded-sm overflow-hidden ${isOutOfStock ? "grayscale" : ""}`}>
           {item.image ? (
             <Image
               src={item.image}
               alt={item.title}
               fill
-              className="object-cover rounded-md"
-              sizes="96px"
+              className="object-cover"
+              sizes="112px"
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
-              <span className="text-textSecondary text-xs">No Image</span>
+              <span className="text-muted-foreground text-xs">No Image</span>
             </div>
           )}
         </div>
-        <div className="flex-1 ">
+
+        {/* Product Info */}
+        <div className="flex-1 min-w-0">
           <h3
-            className={`text-sm font-light mb-1 truncate font-medium ${
+            className={`text-sm sm:text-base font-medium mb-1 uppercase ${
               isOutOfStock
                 ? "text-muted-foreground line-through"
-                : "text-textPrimary"
+                : "text-foreground"
             }`}
           >
             {item.title}
           </h3>
           <p
-            className={`text-xs mb-2 truncate ${
-              isOutOfStock ? "text-muted-foreground" : "text-textSecondary"
+            className={`text-xs sm:text-sm mb-2 uppercase ${
+              isOutOfStock ? "text-muted-foreground" : "text-foreground/60"
             }`}
           >
-            {item.color} - {item.size}
+            {item.color} / {item.size}
           </p>
           <p
-            className={`text-sm font-medium ${
-              isOutOfStock ? "text-muted-foreground" : "text-textPrimary"
+            className={`text-base sm:text-lg font-medium ${
+              isOutOfStock ? "text-muted-foreground" : "text-foreground"
             }`}
           >
-            ₹ {item.price}
+            ₹{item.price.toLocaleString("en-IN")}
           </p>
+
+          {/* Stock Warning - Inline */}
+          {hasStockIssue && (
+            <div className="mt-2 text-xs text-red-600 dark:text-red-400 flex items-center gap-1.5">
+              <AlertCircle className="h-3.5 w-3.5 flex-shrink-0" />
+              <span>
+                {isOutOfStock
+                  ? "Out of stock"
+                  : `Only ${maxStock} available (you have ${item.quantity})`}
+              </span>
+            </div>
+          )}
         </div>
-        <div className="flex items-center flex-col sm:flex-row gap-1 sm:gap-3">
-          <button
-            onClick={() => handleQuantityChange(item.quantity - 1)}
-            disabled={isOutOfStock}
-            className={`w-8 h-8 border border-border transition-opacity duration-200 ${
-              isOutOfStock
-                ? "text-muted-foreground cursor-not-allowed opacity-50"
-                : "text-textSecondary hover:text-textPrimary hover:opacity-80"
-            }`}
-          >
-            -
-          </button>
-          <span
-            className={`w-8 text-center text-sm ${
-              isOutOfStock ? "text-muted-foreground" : "text-textPrimary"
-            }`}
-          >
-            {item.quantity}
-          </span>
-          <button
-            onClick={() => handleQuantityChange(item.quantity + 1)}
-            disabled={isOutOfStock}
-            className={`w-8 h-8 border border-border transition-opacity duration-200 ${
-              isOutOfStock
-                ? "text-muted-foreground cursor-not-allowed opacity-50"
-                : "text-textSecondary hover:text-textPrimary hover:opacity-80"
-            }`}
-          >
-            +
-          </button>
-        </div>
-        <div className="text-right">
+
+        {/* Quantity & Actions */}
+        <div className="flex flex-col items-end gap-3 sm:gap-4">
+          {/* Quantity Controls */}
+          <div className="flex items-center border rounded">
+            <button
+              onClick={() => handleQuantityChange(item.quantity - 1)}
+              disabled={isOutOfStock}
+              className={`w-9 h-9 flex items-center justify-center transition-colors ${
+                isOutOfStock
+                  ? "text-muted-foreground cursor-not-allowed"
+                  : "text-foreground hover:bg-muted"
+              }`}
+            >
+              −
+            </button>
+            <span
+              className={`w-10 text-center text-sm font-medium ${
+                isOutOfStock ? "text-muted-foreground" : "text-foreground"
+              }`}
+            >
+              {item.quantity}
+            </span>
+            <button
+              onClick={() => handleQuantityChange(item.quantity + 1)}
+              disabled={isOutOfStock}
+              className={`w-9 h-9 flex items-center justify-center transition-colors ${
+                isOutOfStock
+                  ? "text-muted-foreground cursor-not-allowed"
+                  : "text-foreground hover:bg-muted"
+              }`}
+            >
+              +
+            </button>
+          </div>
+
+          {/* Subtotal */}
           <p
-            className={`text-sm font-medium mb-2 ${
-              isOutOfStock ? "text-muted-foreground" : "text-textPrimary"
+            className={`text-base sm:text-lg font-medium ${
+              isOutOfStock ? "text-muted-foreground" : "text-foreground"
             }`}
           >
-            ₹ {item.price * item.quantity}
+            ₹{(item.price * item.quantity).toLocaleString("en-IN")}
           </p>
+
+          {/* Remove Button */}
           <button
             onClick={handleRemove}
-            className={`text-xs border border-border rounded-md  p-1 transition-opacity duration-200 hover:opacity-80 ${
+            className={`flex items-center gap-1.5 text-xs transition-opacity hover:opacity-70 ${
               isOutOfStock
-                ? "text-destructive hover:text-destructive/80 font-medium"
-                : "text-textSecondary hover:text-textPrimary"
+                ? "text-red-600 dark:text-red-400"
+                : "text-foreground/60"
             }`}
           >
-            {isOutOfStock ? "Remove (Out of Stock)" : "Remove"}
+            <Trash2 className="h-3.5 w-3.5" />
+            <span className="uppercase">Remove</span>
           </button>
         </div>
       </div>
