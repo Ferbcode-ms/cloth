@@ -107,18 +107,18 @@ export default function ProductsClient({
 
       {/* Product Count and Sort */}
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm font-medium text-muted-foreground">
           Showing {startItem}-{endItem} of {pagination.total} Products
         </p>
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3 w-full md:w-auto">
-          <span className="text-sm text-muted-foreground whitespace-nowrap">
+          <span className="text-sm text-muted-foreground font-medium whitespace-nowrap">
             Sort by:
           </span>
           <Select value={sortBy} onValueChange={updateSort}>
-            <SelectTrigger className="w-full sm:w-[220px]">
+            <SelectTrigger className="w-full sm:w-[180px] font-medium rounded-none cursor-pointer py-2">
               <SelectValue placeholder="Select sort option" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="rounded-none font-medium cursor-pointer">
               <SelectItem value="most-popular">Most Popular</SelectItem>
               <SelectItem value="price-low">Price: Low to High</SelectItem>
               <SelectItem value="price-high">Price: High to Low</SelectItem>

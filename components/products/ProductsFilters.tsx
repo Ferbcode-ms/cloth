@@ -168,7 +168,7 @@ export default function ProductsFilters({
                 <button
                   onClick={() => handleCategorySelect(category)}
                   className={cn(
-                    "w-full flex items-center justify-between text-sm hover:text-foreground transition-colors uppercase cursor-pointer hover:translate-x-1 transition-all",
+                    "w-full flex items-center justify-between text-sm hover:text-foreground transition-colors uppercase cursor-pointer hover:translate-x-1 transition-all font-medium",
                     selectedCategoryName === category.name
                       ? "text-foreground font-medium"
                       : "text-muted-foreground"
@@ -180,13 +180,13 @@ export default function ProductsFilters({
                 {selectedCategoryName === category.name &&
                   category.subcategories &&
                   category.subcategories.length > 0 && (
-                    <div className="ml-4 space-y-1 mt-1">
+                    <div className="ml-4 space-y-2 mt-1">
                       {category.subcategories.map((sub) => (
                         <button
                           key={sub.slug}
                           onClick={() => handleSubcategorySelect(sub.slug)}
                           className={cn(
-                            "w-full flex items-center justify-between text-xs hover:text-foreground transition-colors uppercase cursor-pointer ",
+                            "w-full flex items-center justify-between text-xs hover:text-foreground transition-colors font-medium uppercase cursor-pointer ",
                             selectedSubcategory === sub.slug
                               ? "text-foreground font-medium"
                               : "text-muted-foreground"
@@ -218,7 +218,7 @@ export default function ProductsFilters({
                 key={color._id}
                 onClick={() => toggleColor(color.value)}
                 className={cn(
-                  "relative h-8 w-8 rounded-full border-2 transition-all cursor-pointer",
+                  "relative h-8 w-8 rounded-none border-2 transition-all cursor-pointer",
                   selectedColors.includes(color.value)
                     ? "border-foreground scale-110"
                     : "border-border hover:border-foreground/50"

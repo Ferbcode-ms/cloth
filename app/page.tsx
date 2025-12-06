@@ -142,8 +142,8 @@ export default async function Home() {
       <BrandBanner />
 
       {/* Browse by Category */}
-      <section className="container mx-auto px-4 md:px-6 lg:px-8 py-12 lg:py-16 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-300">
-        <div className=" rounded-4xl p-6 sm:p-8 md:p-12">
+      <section className="container mx-auto px-2 md:px-6 lg:px-8 py-10 lg:py-16 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-300">
+        <div className=" rounded-4xl p-4 sm:p-8 md:p-12">
           <h2 className="text-2xl sm:text-3xl md:text-5xl font-bold mb-6 md:mb-12 text-center text-textPrimary uppercase">
             BROWSE BY CATEGORY
           </h2>

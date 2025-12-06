@@ -31,15 +31,15 @@ export default function ProductDetailClient({
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl overflow-x-hidden">
       {/* Breadcrumbs */}
       <div className="flex items-center gap-2 text-sm text-muted-foreground py-4 sm:py-6 uppercase">
-        <Link href="/" className="hover:text-foreground transition-colors">
+        <Link href="/" className="hover:text-foreground transition-colors font-bold ">
           Home
         </Link>
         <ChevronRight className="h-4 w-4" />
-        <Link href="/products" className="hover:text-foreground transition-colors">
+        <Link href="/products" className="hover:text-foreground transition-colors font-bold ">
           Shop
         </Link>
         <ChevronRight className="h-4 w-4" />
-        <span className="text-foreground font-medium truncate max-w-[200px] sm:max-w-none">
+        <span className="text-foreground font-bold truncate max-w-[200px] sm:max-w-none">
           {product.title}
         </span>
       </div>

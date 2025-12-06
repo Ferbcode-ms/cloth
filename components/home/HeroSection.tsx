@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
@@ -8,27 +9,39 @@ import {
   Carousel,
   CarouselContent,
   CarouselItem,
+  type CarouselApi,
 } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
 
 export default function HeroSection() {
-  const stats = [
-    { number: "200+", label: "International Brands" },
-    { number: "2,000+", label: "High-Quality Products" },
-    { number: "30,000+", label: "Happy Customers" },
-  ];
+  const [api, setApi] = useState<CarouselApi>();
+  const [current, setCurrent] = useState(0);
+
+
+
+  useEffect(() => {
+    if (!api) {
+      return;
+    }
+
+    setCurrent(api.selectedScrollSnap());
+
+    api.on("select", () => {
+      setCurrent(api.selectedScrollSnap());
+    });
+  }, [api]);
 
   const carouselImages = [
     {
-      url: "https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=2070&auto=format&fit=crop",
+      url: "https://images.unsplash.com/photo-1678884399113-0a2b079a31f5?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
       alt: "Fashion Collection 1",
     },
     {
-      url: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=2070&auto=format&fit=crop",
+      url: "https://images.unsplash.com/photo-1577992414733-c6b4892c1543?q=80&w=1946&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
       alt: "Fashion Collection 2",
     },
     {
-      url: "https://images.unsplash.com/photo-1445205170230-053b83016050?q=80&w=2071&auto=format&fit=crop",
+      url: "https://images.unsplash.com/photo-1613915617430-8ab0fd7c6baf?q=80&w=765&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
       alt: "Fashion Collection 3",
     },
   ];
@@ -39,13 +52,14 @@ export default function HeroSection() {
         {/* Carousel Section */}
         <div className="relative w-full animate-in fade-in duration-1000">
           <Carousel
+            setApi={setApi}
             opts={{
               align: "center",
               loop: true,
             }}
             plugins={[
               Autoplay({
-                delay: 5000,
+                delay: 3000,
                 stopOnInteraction: false,
               }),
             ]}
@@ -72,7 +86,7 @@ export default function HeroSection() {
           </Carousel>
 
           {/* Text and Shop Now Button Overlay */}
-          <div className="absolute bottom-10 left-10 sm:bottom-20 sm:left-20 z-10 pointer-events-none">
+          <div className="absolute top-1/3 left-10 sm:bottom-20 sm:left-20 z-10 pointer-events-none">
             {/* Headline */}
             <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4 sm:mb-6 animate-in fade-in slide-in-from-bottom-6 duration-700">
               DISCOVER
@@ -81,7 +95,7 @@ export default function HeroSection() {
             </h2>
             
             {/* Subtext */}
-            <p className="text-base sm:text-lg md:text-xl text-white/90 mb-6 sm:mb-8 max-w-md animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150">
+            <p className="text-base sm:text-lg md:text-xl text-white/90 mb-6 sm:mb-8 sm:max-w-md max-w-xs animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150 ">
               Explore our latest collection of premium fashion
             </p>
             
@@ -89,7 +103,7 @@ export default function HeroSection() {
             <Button
               asChild
               size="lg"
-              className="pointer-events-auto bg-white text-black hover:bg-white/90 rounded-none sm:px-8 px-6 sm:py-6 py-4 text-lg font-semibold shadow-none transition-all duration-300 hover:scale-110 animate-in fade-in slide-in-from-bottom-4 delay-500"
+              className="pointer-events-auto bg-white text-black hover:bg-white/90 rounded-none sm:px-8 px-4 sm:py-6 py-3 text-md font-medium shadow-none transition-all duration-300 hover:scale-110 animate-in fade-in slide-in-from-bottom-4 delay-500"
             >
               <Link href="/products">Shop Now</Link>
             </Button>
@@ -100,6 +114,22 @@ export default function HeroSection() {
           
           {/* Right Side Shadow */}
           <div className="absolute right-0 top-0 bottom-0 w-32 md:w-48 bg-gradient-to-l from-black/40 via-black/20 to-transparent pointer-events-none z-[5]" />
+          
+          {/* Slide Indicators - Right Bottom */}
+          <div className="absolute bottom-6 right-6 md:bottom-8 md:right-8 z-10 flex gap-2">
+            {carouselImages.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => api?.scrollTo(index)}
+                className={`transition-all duration-300 rounded-full ${
+                  index === current
+                    ? "w-8 h-2 bg-white"
+                    : "w-2 h-2 bg-white/50 hover:bg-white/75"
+                }`}
+                aria-label={`Go to slide ${index + 1}`}
+              />
+            ))}
+          </div>
        
         </div>
       </div>

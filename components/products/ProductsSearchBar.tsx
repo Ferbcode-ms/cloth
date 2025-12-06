@@ -57,7 +57,7 @@ export default function ProductsSearchBar({
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           placeholder="Search for products..."
-          className="pl-10 pr-10 bg-muted/50 border-border"
+          className="pl-10 pr-10  rounded-none focus:outline-none font-medium"
           aria-label="Search products"
         />
         {isPending ? (

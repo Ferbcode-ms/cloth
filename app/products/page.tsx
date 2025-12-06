@@ -345,11 +345,11 @@ export default async function ProductsPage({
       <div className="flex justify-between sm:items-center sm:flex-row flex-col">
 
       <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4 sm:mb-8 uppercase">
-        <Link href="/" className="hover:text-foreground transition-colors">
+        <Link href="/" className="hover:text-foreground transition-colors font-semibold">
           Home
         </Link>
         <ChevronRight className="h-4 w-4" />
-        <span className="text-foreground">Shop</span>
+        <span className="text-foreground font-semibold">Shop</span>
       </div>
 
       {/* Search Bar */}

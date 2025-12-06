@@ -28,14 +28,14 @@ export default function CategoriesSection({ categories }: CategoriesSectionProps
   if (categories.length === 0) return null;
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+    <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
       {categories.map((category) => (
         <Link
           key={category._id || category.slug}
           href={`/products?category=${category.name}`}
           className="h-full"
         >
-          <Card className="relative w-full h-full min-h-[300px] md:min-h-[500px] overflow-hidden rounded-none border-0 bg-transparent shadow-none hover:shadow-none transition-all duration-300 group">
+          <Card className="relative w-full h-full min-h-[250px] md:min-h-[500px] overflow-hidden rounded-none border-0 bg-transparent shadow-none hover:shadow-none transition-all duration-300 group">
             <div className="relative w-full h-full">
               <Image
                 src={getCategoryImage(category)}
@@ -56,7 +56,7 @@ export default function CategoriesSection({ categories }: CategoriesSectionProps
                   </p>
                   
                   {/* CATEGORY NAME - Large and Bold */}
-                  <h3 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white uppercase tracking-tighter  leading-none mb-2">
+                  <h3 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white uppercase tracking-tighter  leading-none mb-2">
                     {category.name}
                   </h3>
                   
