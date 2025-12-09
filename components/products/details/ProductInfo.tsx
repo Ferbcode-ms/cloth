@@ -36,7 +36,9 @@ export default function ProductInfo({ product }: ProductInfoProps) {
   const [selectedColor, setSelectedColor] = useState(
     product.variants[0]?.color || ""
   );
-  const [selectedSize, setSelectedSize] = useState("");
+  const [selectedSize, setSelectedSize] = useState(
+    product.variants[0]?.sizes[0]?.size || ""
+  );
   const [quantity, setQuantity] = useState(1);
 
   const selectedVariant = product.variants.find(
@@ -201,7 +203,7 @@ const getColorValue = (colorName: string): string => {
               key={variant.color}
               onClick={() => {
                 setSelectedColor(variant.color);
-                setSelectedSize("");
+                setSelectedSize(variant.sizes[0]?.size || "");
                 setQuantity(1);
               }}
               className={cn(

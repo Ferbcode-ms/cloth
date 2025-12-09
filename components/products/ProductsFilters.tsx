@@ -127,24 +127,32 @@ export default function ProductsFilters({
       setSelectedCategoryName(category.name);
       setSelectedSubcategory("");
     }
+    // Close mobile filters after selection
+    setIsMobileFiltersOpen(false);
   };
 
   const handleSubcategorySelect = (subcategorySlug: string) => {
     setSelectedSubcategory(
       selectedSubcategory === subcategorySlug ? "" : subcategorySlug
     );
+    // Close mobile filters after selection
+    setIsMobileFiltersOpen(false);
   };
 
   const toggleColor = (color: string) => {
     setSelectedColors((prev) =>
       prev.includes(color) ? prev.filter((c) => c !== color) : [...prev, color]
     );
+    // Close mobile filters after selection
+    setIsMobileFiltersOpen(false);
   };
 
   const toggleSize = (size: string) => {
     setSelectedSizes((prev) =>
       prev.includes(size) ? prev.filter((s) => s !== size) : [...prev, size]
     );
+    // Close mobile filters after selection
+    setIsMobileFiltersOpen(false);
   };
 
   const filtersContent = (

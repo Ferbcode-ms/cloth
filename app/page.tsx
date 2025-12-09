@@ -10,6 +10,7 @@ import BrandBanner from "@/components/home/BrandBanner";
 import TestimonialsSection from "@/components/home/TestimonialsSection";
 import CategoriesSection from "@/components/home/CategoriesSection";
 import NewArrivalsSection from "@/components/home/NewArrivalsSection";
+import CategoryProductsSection from "@/components/home/CategoryProductsSection";
 
 export const revalidate = 3600; // Revalidate every hour
 
@@ -106,14 +107,96 @@ async function getCategories() {
   }
 }
 
+async function getCategoryProducts(categoryName: string, limit: number = 6) {
+  try {
+    await connectDB();
+    const products = await Product.find({ category: categoryName })
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .lean();
+
+    // Fetch categories for discount calculation
+    const categories = await Category.find({}).select("name discount discountType").lean();
+    const categoryMap = new Map(categories.map((c: any) => [c.name, c]));
+
+    const productsWithDiscounts = products.map((product: any) => {
+      let finalPrice = product.price;
+      let discountAmount = 0;
+      let hasDiscount = false;
+      let appliedDiscount = 0;
+      let appliedDiscountType = "percentage";
+
+      // 1. Check Product Discount
+      if (product.discount > 0) {
+        hasDiscount = true;
+        appliedDiscount = product.discount;
+        appliedDiscountType = product.discountType || "percentage";
+        
+        if (appliedDiscountType === "fixed") {
+          discountAmount = appliedDiscount;
+        } else {
+          discountAmount = (product.price * appliedDiscount) / 100;
+        }
+      } 
+      // 2. Check Category Discount (only if no product discount)
+      else if (product.category && categoryMap.has(product.category)) {
+        const cat = categoryMap.get(product.category);
+        if (cat && cat.discount > 0) {
+          hasDiscount = true;
+          appliedDiscount = cat.discount;
+          appliedDiscountType = cat.discountType || "percentage";
+          
+          // Attach discount info
+          product.discount = appliedDiscount;
+          product.discountType = appliedDiscountType;
+
+          if (appliedDiscountType === "fixed") {
+            discountAmount = appliedDiscount;
+          } else {
+            discountAmount = (product.price * appliedDiscount) / 100;
+          }
+        }
+      }
+
+      if (hasDiscount) {
+        finalPrice = Math.max(0, product.price - discountAmount);
+        product.originalPrice = product.price;
+        product.price = finalPrice;
+      }
+      
+      return product;
+    });
+
+    return JSON.parse(JSON.stringify(productsWithDiscounts));
+  } catch (error) {
+    console.error(`Error fetching ${categoryName} products:`, error);
+    return [];
+  }
+}
+
 export default async function Home() {
+  await connectDB();
+  
+  // First, fetch categories to get their names
+  const allCategories = await Category.find()
+    .sort({ name: 1 })
+    .limit(3)
+    .lean();
+  const categoryNames = allCategories.map((cat: any) => cat.name);
+
   const newArrivalsData = getNewArrivals();
   const categoriesData = getCategories();
+  const category1Data = categoryNames[0] ? getCategoryProducts(categoryNames[0], 6) : Promise.resolve([]);
+  const category2Data = categoryNames[1] ? getCategoryProducts(categoryNames[1], 6) : Promise.resolve([]);
+  const category3Data = categoryNames[2] ? getCategoryProducts(categoryNames[2], 6) : Promise.resolve([]);
 
   // Parallel data fetching
-  const [newArrivals, categories] = await Promise.all([
+  const [newArrivals, categories, category1Products, category2Products, category3Products] = await Promise.all([
     newArrivalsData,
     categoriesData,
+    category1Data,
+    category2Data,
+    category3Data,
   ]);
 
   const jsonLd = {
@@ -183,6 +266,47 @@ export default async function Home() {
           </Suspense>
         </div>
       </section>
+
+      {/* Category 1 Products */}
+      {categoryNames[0] && category1Products.length > 0 && (
+        <section className="container mx-auto px-4 md:px-6 lg:px-8 py-12 lg:py-16 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-700">
+          <h2 className="text-2xl sm:text-3xl sm:pl-15 md:text-5xl font-bold mb-8 md:mb-12 text-textPrimary">
+            {categoryNames[0].toUpperCase()}
+          </h2>
+          <CategoryProductsSection 
+            categoryName={categoryNames[0]} 
+            products={category1Products} 
+          />
+        </section>
+      )}
+
+      {/* Category 2 Products */}
+      {categoryNames[1] && category2Products.length > 0 && (
+        <section className="w-full bg-muted/60 overflow-hidden">
+          <div className="container mx-auto px-4 md:px-6 lg:px-8 py-12 lg:py-16 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-800">
+            <h2 className="text-2xl sm:text-3xl sm:pl-15 md:text-5xl font-bold mb-8 md:mb-12 text-textPrimary">
+              {categoryNames[1].toUpperCase()}
+            </h2>
+            <CategoryProductsSection 
+              categoryName={categoryNames[1]} 
+              products={category2Products} 
+            />
+          </div>
+        </section>
+      )}
+
+      {/* Category 3 Products */}
+      {categoryNames[2] && category3Products.length > 0 && (
+        <section className="container mx-auto px-4 md:px-6 lg:px-8 py-12 lg:py-16 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-900">
+          <h2 className="text-2xl sm:text-3xl sm:pl-15 md:text-5xl font-bold mb-8 md:mb-12 text-textPrimary">
+            {categoryNames[2].toUpperCase()}
+          </h2>
+          <CategoryProductsSection 
+            categoryName={categoryNames[2]} 
+            products={category3Products} 
+          />
+        </section>
+      )}
 
       {/* Testimonials Section */}
       <TestimonialsSection />

@@ -89,7 +89,7 @@ export default function ProductCard({ product }: ProductCardProps) {
                 </Badge>
               )}
               {isNew && (
-                <Badge className="text-primary hover:bg-background bg-background rounded-none border-0 shadow-lg px-1 sm:px-2 sm:py-1 py-0.5 text-xs font-semibold uppercase tracking-wide flex items-center gap-1">
+                <Badge className="text-white hover:bg-background bg-primary rounded-none border-0 shadow-lg px-1 sm:px-2 sm:py-1 py-0.5 text-xs font-semibold uppercase tracking-wide flex items-center gap-1">
                 
                   New
                 </Badge>
