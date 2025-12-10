@@ -226,7 +226,7 @@ export default function ProductsFilters({
                 key={color._id}
                 onClick={() => toggleColor(color.value)}
                 className={cn(
-                  "relative h-8 w-8 rounded-none border-2 transition-all cursor-pointer",
+                  "relative h-8 w-8 rounded-full border-2 transition-all cursor-pointer",
                   selectedColors.includes(color.value)
                     ? "border-foreground scale-110"
                     : "border-border hover:border-foreground/50"

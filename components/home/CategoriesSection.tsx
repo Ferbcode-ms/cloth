@@ -35,7 +35,7 @@ export default function CategoriesSection({ categories }: CategoriesSectionProps
           href={`/products?category=${encodeURIComponent(category.name)}`}
           className="h-full"
         >
-          <Card className="relative w-full h-full min-h-[250px] md:min-h-[500px] overflow-hidden rounded-none border-0 bg-transparent shadow-none hover:shadow-none transition-all duration-300 group">
+          <Card className="relative w-full h-full min-h-[250px] md:min-h-[500px] overflow-hidden rounded-md border-0 bg-transparent shadow-none hover:shadow-none transition-all duration-300 group">
             <div className="relative w-full h-full">
               <Image
                 src={getCategoryImage(category)}

@@ -3,6 +3,7 @@ import { Metadata } from "next";
 import connectDB from "@/lib/db";
 import Product from "@/lib/models/Product";
 import Category from "@/lib/models/Category";
+import Slider from "@/lib/models/Slider";
 import ProductCardSkeleton from "@/components/products/ProductCardSkeleton";
 import CategoryCardSkeleton from "@/components/products/CategoryCardSkeleton";
 import HeroSection from "@/components/home/HeroSection";
@@ -107,6 +108,20 @@ async function getCategories() {
   }
 }
 
+
+async function getSliders() {
+  try {
+    await connectDB();
+    const sliders = await Slider.find({ isActive: true })
+      .sort({ order: 1 })
+      .lean();
+    return JSON.parse(JSON.stringify(sliders));
+  } catch (error) {
+    console.error("Error fetching sliders:", error);
+    return [];
+  }
+}
+
 async function getCategoryProducts(categoryName: string, limit: number = 6) {
   try {
     await connectDB();
@@ -186,14 +201,16 @@ export default async function Home() {
 
   const newArrivalsData = getNewArrivals();
   const categoriesData = getCategories();
-  const category1Data = categoryNames[0] ? getCategoryProducts(categoryNames[0], 6) : Promise.resolve([]);
-  const category2Data = categoryNames[1] ? getCategoryProducts(categoryNames[1], 6) : Promise.resolve([]);
-  const category3Data = categoryNames[2] ? getCategoryProducts(categoryNames[2], 6) : Promise.resolve([]);
+  const slidersData = getSliders();
+  const category1Data = categoryNames[0] ? getCategoryProducts(categoryNames[0], 4) : Promise.resolve([]);
+  const category2Data = categoryNames[1] ? getCategoryProducts(categoryNames[1], 4) : Promise.resolve([]);
+  const category3Data = categoryNames[2] ? getCategoryProducts(categoryNames[2], 4) : Promise.resolve([]);
 
   // Parallel data fetching
-  const [newArrivals, categories, category1Products, category2Products, category3Products] = await Promise.all([
+  const [newArrivals, categories, sliders, category1Products, category2Products, category3Products] = await Promise.all([
     newArrivalsData,
     categoriesData,
+    slidersData,
     category1Data,
     category2Data,
     category3Data,
@@ -219,7 +236,7 @@ export default async function Home() {
       />
 
       {/* Hero Section */}
-      <HeroSection />
+      <HeroSection sliders={sliders} />
 
       {/* Brand Banner */}
       <BrandBanner />

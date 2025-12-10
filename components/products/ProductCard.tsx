@@ -60,7 +60,7 @@ export default function ProductCard({ product }: ProductCardProps) {
               src={product.images[0]}
               alt={product.title}
               fill
-              className={`object-cover transition-transform duration-300 ${
+              className={`object-cover transition-transform duration-300 rounded-md ${
                 isOutOfStock ? "opacity-60 grayscale" : "group-hover:scale-105"
               }`}
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
@@ -89,7 +89,7 @@ export default function ProductCard({ product }: ProductCardProps) {
                 </Badge>
               )}
               {isNew && (
-                <Badge className="text-white hover:bg-background bg-primary rounded-none border-0 shadow-lg px-1 sm:px-2 sm:py-1 py-0.5 text-xs font-semibold uppercase tracking-wide flex items-center gap-1">
+                <Badge className="text-white hover:bg-background bg-primary rounded-md border-0 shadow-lg px-1 sm:px-2 sm:py-1 py-0.5 text-xs font-semibold uppercase tracking-wide flex items-center gap-1">
                 
                   New
                 </Badge>

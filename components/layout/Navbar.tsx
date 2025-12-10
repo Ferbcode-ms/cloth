@@ -182,7 +182,7 @@ export default function Navbar() {
                 <Button
                   variant="ghost"
                   onClick={() => setIsDesktopShopOpen(!isDesktopShopOpen)}
-                  className="flex items-center gap-3 text-md font-semibold text-foreground/80 hover:text-foreground hover:text-foreground/80  cursor-pointer h-auto p-0 "
+                  className="flex items-center gap-3 text-md font-semibold text-foreground/80 hover:text-foreground hover:text-foreground/80  cursor-pointer h-auto p-0 uppercase"
                 >
                   Shop
                   <ChevronDown
@@ -285,13 +285,13 @@ export default function Navbar() {
 
               <Link 
                 href="/about" 
-                className="text-md font-semibold text-foreground/80 hover:text-foreground/80 transition-colors"
+                className="text-md font-semibold text-foreground/80 hover:text-foreground/80 transition-colors uppercase"
               >
                 About Us
               </Link>
               <Link 
                 href="/contact" 
-                className="text-md font-semibold text-foreground/80 hover:text-foreground/80 transition-colors"
+                className="text-md font-semibold text-foreground/80 hover:text-foreground/80 transition-colors uppercase"
               >
                 Contact
               </Link>
@@ -339,11 +339,12 @@ export default function Navbar() {
               <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
                 <SheetTrigger asChild className="lg:hidden">
                   <Button variant="ghost" size="icon" aria-label="Open menu">
-                    <Menu className="w-6 h-6 stroke-3" />
+                    <Menu className="w-6 h-6 stroke-2" />
                   </Button>
                 </SheetTrigger>
                 <SheetContent
                   side="right"
+                  
                   className="w-full sm:w-full p-0"
                 >
                   <SheetTitle className="sr-only">Navigation Menu</SheetTitle>

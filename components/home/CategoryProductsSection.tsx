@@ -49,7 +49,7 @@ export default function CategoryProductsSection({
           <Button
             asChild
             variant="outline"
-            className="rounded-none border-1 border-primary/40 bg-background text-primary hover:bg-primary hover:text-primary-foreground px-6 py-3 shadow-none text-md font-medium transition-all duration-300"
+            className="rounded-md border-1 border-primary/40 bg-background text-primary hover:bg-primary hover:text-primary-foreground px-6 py-3 shadow-none text-md font-medium transition-all duration-300"
           >
             <Link href={`/products?category=${encodeURIComponent(categoryName)}`}>
               View All {categoryName}

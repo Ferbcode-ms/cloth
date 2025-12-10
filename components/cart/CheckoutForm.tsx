@@ -1,29 +1,13 @@
 "use client";
 
-import { useState, FormEvent } from "react";
+import { useState, useRef, FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import ReCAPTCHA from "react-google-recaptcha";
 import { getCart, clearCart } from "@/lib/utils/cart";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
-import {
-  Loader2,
-  User,
-  Phone,
-  Mail,
-  MapPin,
-  Building2,
-  Hash,
-} from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 interface CheckoutFormProps {
   recaptchaSiteKey: string;
@@ -31,6 +15,7 @@ interface CheckoutFormProps {
 
 export default function CheckoutForm({ recaptchaSiteKey }: CheckoutFormProps) {
   const router = useRouter();
+  const recaptchaRef = useRef<ReCAPTCHA>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [formData, setFormData] = useState({
@@ -56,15 +41,10 @@ export default function CheckoutForm({ recaptchaSiteKey }: CheckoutFormProps) {
     }
 
     try {
-      // reCAPTCHA is disabled for now
-      // const token = await new Promise<string>((resolve, reject) => {
-      //   (window as any).grecaptcha.ready(() => {
-      //     (window as any).grecaptcha
-      //       .execute(recaptchaSiteKey, { action: "checkout" })
-      //       .then(resolve)
-      //       .catch(reject);
-      //   });
-      // });
+      const token = recaptchaRef.current?.getValue();
+      if (!token) {
+        throw new Error("Please verify that you are not a robot");
+      }
 
       const orderData = {
         items: cart.map((item) => ({
@@ -74,7 +54,7 @@ export default function CheckoutForm({ recaptchaSiteKey }: CheckoutFormProps) {
           size: item.size,
         })),
         customer: formData,
-        recaptchaToken: "", // reCAPTCHA disabled
+        recaptchaToken: token,
       };
 
       const response = await fetch("/api/orders", {
@@ -88,6 +68,7 @@ export default function CheckoutForm({ recaptchaSiteKey }: CheckoutFormProps) {
       const data = await response.json();
 
       if (!response.ok) {
+        recaptchaRef.current?.reset();
         throw new Error(data.error || "Failed to create order");
       }
 
@@ -95,9 +76,9 @@ export default function CheckoutForm({ recaptchaSiteKey }: CheckoutFormProps) {
       router.push(`/checkout/success?orderId=${data.order.id}`);
     } catch (err: any) {
       setError(err.message || "Something went wrong");
-    } finally {
-      setLoading(false);
-    }
+      setLoading(false); // Stop loading on error
+    } 
+    // Do not stop loading on success to prevent UI flicker before redirect
   };
 
   const handleChange = (
@@ -233,7 +214,17 @@ export default function CheckoutForm({ recaptchaSiteKey }: CheckoutFormProps) {
             />
           </Field>
 
-          <div className="pt-6">
+          <div className="pt-4">
+             {recaptchaSiteKey && (
+              <div className="mb-4">
+                <ReCAPTCHA
+                  ref={recaptchaRef}
+                  sitekey={recaptchaSiteKey}
+                  theme="light"
+                />
+              </div>
+            )}
+            
             <Button
               type="submit"
               disabled={loading}

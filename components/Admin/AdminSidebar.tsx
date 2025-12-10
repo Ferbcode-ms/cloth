@@ -12,6 +12,8 @@ import {
   Palette,
   Ruler,
   Settings,
+  GalleryHorizontalEnd,
+  Images,
 } from "lucide-react";
 import {
   Sidebar,
@@ -60,6 +62,11 @@ const navigation = [
     name: "Settings",
     href: "/admin/settings",
     icon: Settings,
+  },
+  {
+    name: "Sliders",
+    href: "/admin/sliders",
+    icon: Images,
   },
 ];
 
