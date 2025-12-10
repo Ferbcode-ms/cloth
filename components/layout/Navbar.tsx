@@ -166,7 +166,7 @@ export default function Navbar() {
       {/* Main Navigation */}
       <nav className="border-b border-gray-300 bg-background sticky top-0 z-50 sm:px-16">
         <div className="container mx-auto px-4 md:px-6">
-          <div className="flex items-center justify-between h-16 md:h-18">
+          <div className="flex items-center justify-between h-14 md:h-16">
             {/* Logo */}
             <Link
               href="/"
