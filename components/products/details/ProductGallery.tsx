@@ -141,7 +141,7 @@ export default function ProductGallery({ images, title }: ProductGalleryProps) {
                   className={cn(
                     "relative flex-shrink-0 w-16 h-16 rounded-sm overflow-hidden transition-all duration-300",
                     index === selectedIndex
-                      ? "ring-2 ring-foreground opacity-100"
+                      ? " opacity-100"
                       : "opacity-50"
                   )}
                 >

@@ -12,6 +12,8 @@ import TestimonialsSection from "@/components/home/TestimonialsSection";
 import CategoriesSection from "@/components/home/CategoriesSection";
 import NewArrivalsSection from "@/components/home/NewArrivalsSection";
 import CategoryProductsSection from "@/components/home/CategoryProductsSection";
+import { calculateProductPrice } from "@/lib/utils/price";
+
 
 export const revalidate = 3600; // Revalidate every hour
 
@@ -40,51 +42,7 @@ async function getNewArrivals() {
     const categoryMap = new Map(categories.map((c: any) => [c.name, c]));
 
     const productsWithDiscounts = products.map((product: any) => {
-      let finalPrice = product.price;
-      let discountAmount = 0;
-      let hasDiscount = false;
-      let appliedDiscount = 0;
-      let appliedDiscountType = "percentage";
-
-      // 1. Check Product Discount
-      if (product.discount > 0) {
-        hasDiscount = true;
-        appliedDiscount = product.discount;
-        appliedDiscountType = product.discountType || "percentage";
-        
-        if (appliedDiscountType === "fixed") {
-          discountAmount = appliedDiscount;
-        } else {
-          discountAmount = (product.price * appliedDiscount) / 100;
-        }
-      } 
-      // 2. Check Category Discount (only if no product discount)
-      else if (product.category && categoryMap.has(product.category)) {
-        const cat = categoryMap.get(product.category);
-        if (cat && cat.discount > 0) {
-          hasDiscount = true;
-          appliedDiscount = cat.discount;
-          appliedDiscountType = cat.discountType || "percentage";
-          
-          // Attach discount info
-          product.discount = appliedDiscount;
-          product.discountType = appliedDiscountType;
-
-          if (appliedDiscountType === "fixed") {
-            discountAmount = appliedDiscount;
-          } else {
-            discountAmount = (product.price * appliedDiscount) / 100;
-          }
-        }
-      }
-
-      if (hasDiscount) {
-        finalPrice = Math.max(0, product.price - discountAmount);
-        product.originalPrice = product.price;
-        product.price = finalPrice;
-      }
-      
-      return product;
+      return calculateProductPrice(product, categoryMap);
     });
 
     return JSON.parse(JSON.stringify(productsWithDiscounts));
@@ -135,51 +93,7 @@ async function getCategoryProducts(categoryName: string, limit: number = 6) {
     const categoryMap = new Map(categories.map((c: any) => [c.name, c]));
 
     const productsWithDiscounts = products.map((product: any) => {
-      let finalPrice = product.price;
-      let discountAmount = 0;
-      let hasDiscount = false;
-      let appliedDiscount = 0;
-      let appliedDiscountType = "percentage";
-
-      // 1. Check Product Discount
-      if (product.discount > 0) {
-        hasDiscount = true;
-        appliedDiscount = product.discount;
-        appliedDiscountType = product.discountType || "percentage";
-        
-        if (appliedDiscountType === "fixed") {
-          discountAmount = appliedDiscount;
-        } else {
-          discountAmount = (product.price * appliedDiscount) / 100;
-        }
-      } 
-      // 2. Check Category Discount (only if no product discount)
-      else if (product.category && categoryMap.has(product.category)) {
-        const cat = categoryMap.get(product.category);
-        if (cat && cat.discount > 0) {
-          hasDiscount = true;
-          appliedDiscount = cat.discount;
-          appliedDiscountType = cat.discountType || "percentage";
-          
-          // Attach discount info
-          product.discount = appliedDiscount;
-          product.discountType = appliedDiscountType;
-
-          if (appliedDiscountType === "fixed") {
-            discountAmount = appliedDiscount;
-          } else {
-            discountAmount = (product.price * appliedDiscount) / 100;
-          }
-        }
-      }
-
-      if (hasDiscount) {
-        finalPrice = Math.max(0, product.price - discountAmount);
-        product.originalPrice = product.price;
-        product.price = finalPrice;
-      }
-      
-      return product;
+      return calculateProductPrice(product, categoryMap);
     });
 
     return JSON.parse(JSON.stringify(productsWithDiscounts));

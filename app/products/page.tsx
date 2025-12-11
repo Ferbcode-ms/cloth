@@ -12,6 +12,7 @@ import Product from "@/lib/models/Product";
 import Category from "@/lib/models/Category";
 import Color from "@/lib/models/Color";
 import Size from "@/lib/models/Size";
+import { calculateProductPrice } from "@/lib/utils/price";
 import type { SortOrder } from "mongoose";
 
 export const revalidate = 3600; // Revalidate every hour
@@ -219,56 +220,14 @@ async function getProducts(
 
     const sanitizedProducts = result.products.map((product: any) => {
       // Calculate Discount
-      let finalPrice = product.price;
-      let discountAmount = 0;
-      let hasDiscount = false;
-      let appliedDiscount = 0;
-      let appliedDiscountType = "percentage";
+      const calculatedProduct = calculateProductPrice(product, categoryMap);
 
-      // 1. Check Product Discount
-      if (product.discount > 0) {
-        hasDiscount = true;
-        appliedDiscount = product.discount;
-        appliedDiscountType = product.discountType || "percentage";
-        
-        if (appliedDiscountType === "fixed") {
-          discountAmount = appliedDiscount;
-        } else {
-          discountAmount = (product.price * appliedDiscount) / 100;
-        }
-      } 
-      // 2. Check Category Discount (only if no product discount)
-      else if (product.category && categoryMap.has(product.category)) {
-        const cat = categoryMap.get(product.category);
-        if (cat && cat.discount > 0) {
-          hasDiscount = true;
-          appliedDiscount = cat.discount;
-          appliedDiscountType = cat.discountType || "percentage";
-          
-          // Attach discount info
-          product.discount = appliedDiscount;
-          product.discountType = appliedDiscountType;
-
-          if (appliedDiscountType === "fixed") {
-            discountAmount = appliedDiscount;
-          } else {
-            discountAmount = (product.price * appliedDiscount) / 100;
-          }
-        }
-      }
-
-      if (hasDiscount) {
-        finalPrice = Math.max(0, product.price - discountAmount);
-        product.originalPrice = product.price;
-        product.price = finalPrice;
-      }
-
-      if ("score" in product) {
+      if ("score" in calculatedProduct) {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { score, ...rest } = product;
+        const { score, ...rest } = calculatedProduct;
         return rest;
       }
-      return product;
+      return calculatedProduct;
     });
 
     return {

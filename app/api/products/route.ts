@@ -3,6 +3,7 @@ import connectDB from "@/lib/db";
 import Product from "@/lib/models/Product";
 import Category from "@/lib/models/Category";
 import { verifyAuth } from "@/lib/utils/auth";
+import { calculateProductPrice } from "@/lib/utils/price";
 
 export async function GET(request: NextRequest) {
   try {
@@ -32,54 +33,7 @@ export async function GET(request: NextRequest) {
     const categoryMap = new Map(categories.map((c: any) => [c.name, c]));
 
     const productsWithDiscounts = products.map((product: any) => {
-      let finalPrice = product.price;
-      let discountAmount = 0;
-      let hasDiscount = false;
-      let appliedDiscount = 0;
-      let appliedDiscountType = "percentage";
-
-      // 1. Check Product Discount
-      if (product.discount > 0) {
-        hasDiscount = true;
-        appliedDiscount = product.discount;
-        appliedDiscountType = product.discountType || "percentage";
-        
-        if (appliedDiscountType === "fixed") {
-          discountAmount = appliedDiscount;
-        } else {
-          discountAmount = (product.price * appliedDiscount) / 100;
-        }
-      } 
-      // 2. Check Category Discount (only if no product discount)
-      else if (product.category && categoryMap.has(product.category)) {
-        const cat = categoryMap.get(product.category);
-        if (cat && cat.discount > 0) {
-          hasDiscount = true;
-          appliedDiscount = cat.discount;
-          appliedDiscountType = cat.discountType || "percentage";
-          
-          // Attach discount info to product so UI can show it
-          product.discount = appliedDiscount;
-          product.discountType = appliedDiscountType;
-
-          if (appliedDiscountType === "fixed") {
-            discountAmount = appliedDiscount;
-          } else {
-            discountAmount = (product.price * appliedDiscount) / 100;
-          }
-        }
-      }
-
-      if (hasDiscount) {
-        finalPrice = Math.max(0, product.price - discountAmount);
-        return {
-          ...product,
-          originalPrice: product.price, // Set original price to the database price
-          price: finalPrice, // Set current price to the discounted price
-        };
-      }
-
-      return product;
+      return calculateProductPrice(product, categoryMap);
     });
 
     return NextResponse.json({
