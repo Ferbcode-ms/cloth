@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import { toast } from "react-toastify";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -481,15 +482,15 @@ export default function AdminCategoriesClient({
                       </TableCell>
                       <TableCell>
                         {category.image ? (
-                          <img
-                            src={category.image}
-                            alt={category.name}
-                            className="w-12 h-12 object-cover rounded border"
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).style.display =
-                                "none";
-                            }}
-                          />
+                          <div className="relative w-12 h-12 rounded border overflow-hidden">
+                            <Image
+                              src={category.image}
+                              alt={category.name}
+                              fill
+                              sizes="48px"
+                              className="object-cover"
+                            />
+                          </div>
                         ) : (
                           <span className="text-muted-foreground text-xs">
                             No image

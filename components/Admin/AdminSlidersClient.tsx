@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { toast } from "react-toastify";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -363,15 +364,15 @@ export default function AdminSlidersClient({
                   sliders.map((slider) => (
                     <TableRow key={slider._id}>
                       <TableCell>
-                        <img
-                          src={slider.imageUrl}
-                          alt={slider.title}
-                          className="w-24 h-12 object-cover rounded border"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).style.display =
-                              "none";
-                          }}
-                        />
+                        <div className="relative w-24 h-12 rounded border overflow-hidden">
+                          <Image
+                            src={slider.imageUrl}
+                            alt={slider.title}
+                            fill
+                            sizes="96px"
+                            className="object-cover"
+                          />
+                        </div>
                       </TableCell>
                       <TableCell className="font-medium">
                         {slider.title}

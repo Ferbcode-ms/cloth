@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { User, Menu, ChevronDown, ShoppingBag, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
@@ -256,11 +257,13 @@ export default function Navbar() {
                                   className="flex items-center gap-3 p-2 hover:bg-accent rounded-md transition-colors group"
                                 >
                                   {product.images && product.images[0] && (
-                                    <div className="w-12 h-12 bg-muted rounded-md overflow-hidden flex-shrink-0">
-                                      <img
+                                    <div className="w-12 h-12 bg-muted rounded-md overflow-hidden flex-shrink-0 relative">
+                                      <Image
                                         src={product.images[0]}
                                         alt={product.title}
-                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                                        fill
+                                        sizes="48px"
+                                        className="object-cover group-hover:scale-105 transition-transform"
                                       />
                                     </div>
                                   )}
@@ -467,11 +470,13 @@ export default function Navbar() {
                                               className="flex items-center gap-2 py-1 group"
                                             >
                                               {product.images && product.images[0] && (
-                                                <div className="w-10 h-10 bg-muted rounded overflow-hidden flex-shrink-0">
-                                                  <img
+                                                <div className="w-10 h-10 bg-muted rounded overflow-hidden flex-shrink-0 relative">
+                                                  <Image
                                                     src={product.images[0]}
                                                     alt={product.title}
-                                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                                                    fill
+                                                    sizes="40px"
+                                                    className="object-cover group-hover:scale-105 transition-transform"
                                                   />
                                                 </div>
                                               )}

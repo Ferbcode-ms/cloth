@@ -181,7 +181,7 @@ export default async function Home() {
       {/* New Arrivals */}
       <section className="w-full bg-muted/60 overflow-hidden">
         <div className="container mx-auto px-4 md:px-6 lg:px-8 py-12 lg:py-16 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-500">
-          <h2 className="text-2xl sm:text-3xl sm:pl-15 md:text-5xl font-bold mb-8 md:mb-12  text-textPrimary">
+          <h2 className="text-2xl sm:text-3xl sm:pl-15 md:text-5xl font-semibold mb-8 md:mb-12  text-textPrimary">
             NEW ARRIVALS
           </h2>
           <Suspense
@@ -201,7 +201,7 @@ export default async function Home() {
       {/* Category 1 Products */}
       {categoryNames[0] && category1Products.length > 0 && (
         <section className="container mx-auto px-4 md:px-6 lg:px-8 py-12 lg:py-16 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-700">
-          <h2 className="text-2xl sm:text-3xl sm:pl-15 md:text-5xl font-bold mb-8 md:mb-12 text-textPrimary">
+          <h2 className="text-2xl sm:text-3xl sm:pl-15 md:text-5xl font-semibold mb-8 md:mb-12 text-textPrimary">
             {categoryNames[0].toUpperCase()}
           </h2>
           <CategoryProductsSection 
@@ -215,7 +215,7 @@ export default async function Home() {
       {categoryNames[1] && category2Products.length > 0 && (
         <section className="w-full bg-muted/60 overflow-hidden">
           <div className="container mx-auto px-4 md:px-6 lg:px-8 py-12 lg:py-16 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-800">
-            <h2 className="text-2xl sm:text-3xl sm:pl-15 md:text-5xl font-bold mb-8 md:mb-12 text-textPrimary">
+            <h2 className="text-2xl sm:text-3xl sm:pl-15 md:text-5xl font-semibold mb-8 md:mb-12 text-textPrimary">
               {categoryNames[1].toUpperCase()}
             </h2>
             <CategoryProductsSection 
@@ -229,7 +229,7 @@ export default async function Home() {
       {/* Category 3 Products */}
       {categoryNames[2] && category3Products.length > 0 && (
         <section className="container mx-auto px-4 md:px-6 lg:px-8 py-12 lg:py-16 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-900">
-          <h2 className="text-2xl sm:text-3xl sm:pl-15 md:text-5xl font-bold mb-8 md:mb-12 text-textPrimary">
+          <h2 className="text-2xl sm:text-3xl sm:pl-15 md:text-5xl font-semibold mb-8 md:mb-12 text-textPrimary">
             {categoryNames[2].toUpperCase()}
           </h2>
           <CategoryProductsSection 
