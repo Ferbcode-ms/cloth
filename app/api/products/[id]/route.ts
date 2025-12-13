@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/db";
 import Product from "@/lib/models/Product";
 import { verifyAuth } from "@/lib/utils/auth";
+import { deleteImageFromCloudinary } from "@/lib/utils/cloudinary";
 
 export async function GET(
   request: NextRequest,
@@ -93,10 +94,20 @@ export async function DELETE(
     await connectDB();
     const { id } = await params;
 
-    const product = await Product.findByIdAndDelete(id);
+    const product = await Product.findById(id);
     if (!product) {
       return NextResponse.json({ error: "Product not found" }, { status: 404 });
     }
+
+    // Delete images from Cloudinary
+    if (product.images && product.images.length > 0) {
+      const deletePromises = product.images.map((imageUrl: string) =>
+        deleteImageFromCloudinary(imageUrl)
+      );
+      await Promise.all(deletePromises);
+    }
+
+    await Product.findByIdAndDelete(id);
 
     return NextResponse.json({ message: "Product deleted successfully" });
   } catch (error: any) {

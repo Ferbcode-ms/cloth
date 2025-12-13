@@ -24,4 +24,25 @@ export const generateSignedUploadUrl = () => {
   };
 };
 
+export const deleteImageFromCloudinary = async (imageUrl: string) => {
+  try {
+    // Extract public ID from URL
+    // URL format: https://res.cloudinary.com/cloud_name/image/upload/v1234567890/folder/public_id.jpg
+    const regex = /\/v\d+\/(.+)\.[^.]+$/;
+    const match = imageUrl.match(regex);
+
+    if (!match || !match[1]) {
+      console.error("Could not extract public ID from URL:", imageUrl);
+      return;
+    }
+
+    const publicId = match[1];
+
+    await cloudinary.uploader.destroy(publicId);
+    console.log(`Deleted image from Cloudinary: ${publicId}`);
+  } catch (error) {
+    console.error("Error deleting image from Cloudinary:", error);
+  }
+};
+
 export default cloudinary;

@@ -52,13 +52,19 @@ export default function AdminProductsClient({
   const [selectedProducts, setSelectedProducts] = useState<Set<string>>(
     new Set()
   );
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
-  const fetchProducts = async () => {
+  const fetchProducts = async (page = 1) => {
     setLoading(true);
     try {
-      const response = await fetch("/api/products");
+      const response = await fetch(
+        `/api/products?page=${page}&limit=20`
+      );
       const data = await response.json();
       setProducts(data.products || []);
+      setTotalPages(data.pagination?.pages || 1);
+      setCurrentPage(page);
     } catch (error) {
       console.error("Error fetching products:", error);
     } finally {
@@ -75,8 +81,8 @@ export default function AdminProductsClient({
       });
 
       if (!response.ok) throw new Error("Failed to delete product");
-
-      await fetchProducts();
+      
+      await fetchProducts(currentPage);
       toast.success("Product deleted successfully");
     } catch (error: any) {
       toast.error(error.message || "Failed to delete product");
@@ -91,7 +97,7 @@ export default function AdminProductsClient({
   const handleFormClose = () => {
     setShowForm(false);
     setEditingProduct(null);
-    fetchProducts();
+    fetchProducts(currentPage);
   };
 
   const calculateTotalStock = (product: Product): number => {
@@ -165,7 +171,7 @@ export default function AdminProductsClient({
 
       await Promise.all(deletePromises);
       setSelectedProducts(new Set());
-      await fetchProducts();
+      await fetchProducts(currentPage);
       toast.success("Products deleted successfully");
     } catch (error: any) {
       toast.error(error.message || "Failed to delete products");
@@ -340,6 +346,32 @@ export default function AdminProductsClient({
             </div>
           </CardContent>
         </Card>
+      )}
+
+      {!loading && !showForm && products.length > 0 && (
+        <div className="flex items-center justify-between mt-4">
+          <div className="text-sm text-textSecondary">
+            Page {currentPage} of {totalPages}
+          </div>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => fetchProducts(currentPage - 1)}
+              disabled={currentPage <= 1 || loading}
+            >
+              Previous
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => fetchProducts(currentPage + 1)}
+              disabled={currentPage >= totalPages || loading}
+            >
+              Next
+            </Button>
+          </div>
+        </div>
       )}
     </div>
   );

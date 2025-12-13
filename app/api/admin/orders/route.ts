@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/db";
 import Order from "@/lib/models/Order";
+import Product from "@/lib/models/Product";
 import { verifyAuth } from "@/lib/utils/auth";
 
 export async function GET(request: NextRequest) {
@@ -13,6 +14,9 @@ export async function GET(request: NextRequest) {
     await connectDB();
 
     const { searchParams } = new URL(request.url);
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "20");
+    const skip = (page - 1) * limit;
     const dateFilter = searchParams.get("date");
     const startDate = searchParams.get("startDate");
     const endDate = searchParams.get("endDate");
@@ -46,9 +50,58 @@ export async function GET(request: NextRequest) {
       };
     }
 
-    const orders = await Order.find(query).sort({ createdAt: -1 }).lean();
+    const orders = await Order.find(query)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean();
 
-    return NextResponse.json({ orders });
+    const total = await Order.countDocuments(query);
+
+    // Populate product images manually
+    // 1. Get all product IDs from the orders
+    const productIds = new Set<string>();
+    orders.forEach((order: any) => {
+      order.items.forEach((item: any) => {
+        if (item.productId) {
+          productIds.add(item.productId);
+        }
+      });
+    });
+
+    // 2. Fetch products with these IDs (only images)
+    const products = await Product.find({ _id: { $in: Array.from(productIds) } })
+      .select("images")
+      .lean();
+
+    // 3. Create a map of product ID to image
+    const productImages = new Map<string, string>();
+    products.forEach((product: any) => {
+      if (product.images && product.images.length > 0) {
+        productImages.set(product._id.toString(), product.images[0]);
+      }
+    });
+
+    // 4. Attach images to order items
+    const ordersWithImages = orders.map((order: any) => {
+      return {
+        ...order,
+        items: order.items.map((item: any) => ({
+          ...item,
+          image: productImages.get(item.productId) || null,
+        })),
+      };
+    });
+
+    return NextResponse.json({
+      orders: ordersWithImages,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit),
+      },
+    });
   } catch (error: any) {
     console.error("Error fetching orders:", error);
     return NextResponse.json(

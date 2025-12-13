@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { toast } from "react-toastify";
+import Image from "next/image";
 import {
   Table,
   TableBody,
@@ -25,6 +26,7 @@ interface OrderItem {
   quantity: number;
   color: string;
   size: string;
+  image?: string;
 }
 
 interface Customer {
@@ -59,16 +61,24 @@ export default function AdminOrdersClient({
   const [selectedOrders, setSelectedOrders] = useState<Set<string>>(new Set());
   const [dateFilter, setDateFilter] = useState<string>("");
   const [loading, setLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
-  // Fetch orders with date filter
-  const fetchOrders = async (date?: string) => {
+  const fetchOrders = async (page = 1, date?: string) => {
     setLoading(true);
     try {
-      const url = date ? `/api/admin/orders?date=${date}` : "/api/admin/orders";
-      const response = await fetch(url);
+      const queryParams = new URLSearchParams({
+        page: page.toString(),
+        limit: "20",
+      });
+      if (date) queryParams.append("date", date);
+
+      const response = await fetch(`/api/admin/orders?${queryParams}`);
       const data = await response.json();
       if (response.ok) {
         setOrders(data.orders || []);
+        setTotalPages(data.pagination?.pages || 1);
+        setCurrentPage(page);
         setSelectedOrders(new Set()); // Clear selections
       }
     } catch (error) {
@@ -82,9 +92,9 @@ export default function AdminOrdersClient({
   const handleDateFilterChange = (date: string) => {
     setDateFilter(date);
     if (date) {
-      fetchOrders(date);
+      fetchOrders(1, date);
     } else {
-      fetchOrders();
+      fetchOrders(1);
     }
   };
 
@@ -98,13 +108,13 @@ export default function AdminOrdersClient({
   const filterTodayOrders = () => {
     const today = getTodayDate();
     setDateFilter(today);
-    fetchOrders(today);
+    fetchOrders(1, today);
   };
 
   // Clear date filter
   const clearDateFilter = () => {
     setDateFilter("");
-    fetchOrders();
+    fetchOrders(1);
   };
 
   // Toggle order selection
@@ -295,24 +305,24 @@ export default function AdminOrdersClient({
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
       background-color: #fafafa;
       color: #111827;
-      padding: 40px 20px;
-      line-height: 1.6;
+      padding: 20px;
+      line-height: 1.4;
     }
     .invoice-container {
       max-width: 800px;
       margin: 0 auto;
       background: white;
-      padding: 60px;
+      padding: 40px;
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     }
     .header {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
-      margin-bottom: 60px;
+      margin-bottom: 30px;
     }
     .logo {
-      font-size: 72px;
+      font-size: 48px;
       font-weight: 300;
       line-height: 1;
       color: #111827;
@@ -321,49 +331,49 @@ export default function AdminOrdersClient({
       text-align: right;
     }
     .invoice-title h1 {
-      font-size: 48px;
+      font-size: 32px;
       font-weight: 700;
       letter-spacing: 2px;
-      margin-bottom: 16px;
+      margin-bottom: 8px;
     }
     .invoice-info {
-      font-size: 14px;
+      font-size: 12px;
       color: #6b7280;
-      line-height: 1.8;
+      line-height: 1.5;
     }
     .billed-to {
-      margin-bottom: 40px;
+      margin-bottom: 25px;
     }
     .billed-to h2 {
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 700;
       letter-spacing: 1px;
       text-transform: uppercase;
-      margin-bottom: 16px;
+      margin-bottom: 8px;
       color: #111827;
     }
     .billed-to p {
-      font-size: 14px;
+      font-size: 13px;
       color: #374151;
-      margin-bottom: 4px;
+      margin-bottom: 2px;
     }
     .separator {
       height: 1px;
       background-color: #e5e7eb;
-      margin: 30px 0;
+      margin: 20px 0;
     }
     .items-table {
       width: 100%;
-      margin: 30px 0;
+      margin: 20px 0;
     }
     .items-table thead th {
       text-align: left;
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.5px;
       color: #6b7280;
-      padding: 12px 0;
+      padding: 8px 0;
       border-bottom: 2px solid #e5e7eb;
     }
     .items-table thead th:last-child {
@@ -374,14 +384,14 @@ export default function AdminOrdersClient({
       text-align: center;
     }
     .summary {
-      margin-top: 30px;
+      margin-top: 20px;
       text-align: right;
     }
     .summary-row {
       display: flex;
       justify-content: flex-end;
-      padding: 8px 0;
-      font-size: 14px;
+      padding: 4px 0;
+      font-size: 13px;
     }
     .summary-label {
       width: 150px;
@@ -396,61 +406,64 @@ export default function AdminOrdersClient({
     }
     .summary-total {
       border-top: 2px solid #e5e7eb;
-      padding-top: 12px;
-      margin-top: 12px;
+      padding-top: 8px;
+      margin-top: 8px;
       font-weight: 700;
-      font-size: 18px;
+      font-size: 16px;
     }
     .summary-total .summary-label,
     .summary-total .summary-value {
       color: #111827;
     }
     .footer {
-      margin-top: 60px;
+      margin-top: 40px;
       display: flex;
       justify-content: space-between;
       align-items: flex-end;
     }
     .thank-you {
-      font-size: 18px;
+      font-size: 16px;
       font-weight: 500;
-      margin-bottom: 20px;
+      margin-bottom: 15px;
     }
     .payment-info h3 {
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 1px;
-      margin-bottom: 12px;
+      margin-bottom: 8px;
       color: #111827;
     }
     .payment-info p {
-      font-size: 14px;
+      font-size: 13px;
       color: #374151;
-      margin-bottom: 4px;
+      margin-bottom: 2px;
     }
     .signature {
       text-align: right;
     }
     .signature-name {
       font-family: 'Brush Script MT', cursive;
-      font-size: 24px;
-      margin-bottom: 8px;
+      font-size: 20px;
+      margin-bottom: 4px;
       color: #111827;
     }
     .signature-address {
-      font-size: 12px;
+      font-size: 11px;
       color: #6b7280;
-      margin-top: 30px;
+      margin-top: 15px;
     }
     @media print {
       body {
         background: white;
         padding: 0;
+        -webkit-print-color-adjust: exact;
       }
       .invoice-container {
         box-shadow: none;
-        padding: 40px;
+        padding: 30px;
+        max-width: 100%;
+        margin: 0;
       }
     }
   </style>
@@ -779,6 +792,31 @@ export default function AdminOrdersClient({
         </Table>
       </Card>
 
+      {/* Pagination Controls */}
+      <div className="flex items-center justify-between mt-4">
+        <div className="text-sm text-textSecondary">
+          Page {currentPage} of {totalPages}
+        </div>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => fetchOrders(currentPage - 1, dateFilter)}
+            disabled={currentPage <= 1 || loading}
+          >
+            Previous
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => fetchOrders(currentPage + 1, dateFilter)}
+            disabled={currentPage >= totalPages || loading}
+          >
+            Next
+          </Button>
+        </div>
+      </div>
+
       {/* Order Detail Modal */}
       {selectedOrder && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -883,19 +921,44 @@ export default function AdminOrdersClient({
                   </h3>
                   <div className="space-y-3">
                     {selectedOrder.items.map((item, index) => (
-                      <Card key={index}>
-                        <CardContent className="p-4">
-                          <p className="text-sm font-medium text-textPrimary mb-1">
+                      <div
+                        key={index}
+                        className="flex items-start gap-4 p-4 border rounded-lg bg-card text-card-foreground shadow-sm"
+                      >
+                        {/* Product Image */}
+                        <div className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-md border border-border bg-muted">
+                          {item.image ? (
+                            <Image
+                              src={item.image}
+                              alt={item.title}
+                              fill
+                              className="object-cover"
+                            />
+                          ) : (
+                            <div className="flex h-full w-full items-center justify-center text-xs text-muted-foreground">
+                              No Image
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Details */}
+                        <div className="flex-1">
+                          <h4 className="text-sm font-medium text-textPrimary leading-none mb-1">
                             {item.title}
+                          </h4>
+                          <p className="text-sm text-textSecondary mb-2">
+                             {item.color} | {item.size}
                           </p>
-                          <p className="text-xs text-textSecondary mb-2">
-                            {item.color} - {item.size} × {item.quantity}
-                          </p>
-                          <p className="text-sm font-medium text-textPrimary">
-                            ₹{item.price * item.quantity}
-                          </p>
-                        </CardContent>
-                      </Card>
+                          <div className="flex justify-between items-center mt-2">
+                             <div className="text-sm">
+                               <span className="text-textSecondary">Qty:</span> <span className="font-medium">{item.quantity}</span>
+                             </div>
+                             <div className="text-sm font-medium text-textPrimary">
+                               ₹{(item.price * item.quantity).toLocaleString()}
+                             </div>
+                          </div>
+                        </div>
+                      </div>
                     ))}
                   </div>
                 </div>
