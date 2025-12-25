@@ -1,23 +1,51 @@
 "use client";
 
-import { useState, useRef, FormEvent } from "react";
+import { useState, useRef, FormEvent, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import ReCAPTCHA from "react-google-recaptcha";
 import { getCart, clearCart } from "@/lib/utils/cart";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Loader2 } from "lucide-react";
+import { State, City } from "country-state-city";
+import { z } from "zod";
 
 interface CheckoutFormProps {
   recaptchaSiteKey: string;
 }
+
+const checkoutSchema = z.object({
+  name: z.string().min(2, "Name must be at least 2 characters"),
+  phone: z.string().regex(/^\d{10}$/, "Phone number must be exactly 10 digits"),
+  email: z.string().email("Invalid email address"),
+  address: z.string().min(10, "Address must be at least 10 characters"),
+  city: z.string().min(1, "City is required"),
+  state: z.string().min(1, "State is required"),
+  pincode: z.string().regex(/^[1-9][0-9]{5}$/, "Pincode must be exactly 6 digits"),
+});
+
+type ValidationErrors = {
+  [key in keyof typeof checkoutSchema.shape]?: string;
+};
 
 export default function CheckoutForm({ recaptchaSiteKey }: CheckoutFormProps) {
   const router = useRouter();
   const recaptchaRef = useRef<ReCAPTCHA>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<ValidationErrors>({});
+  
+  // State for location handling
+  const [selectedStateCode, setSelectedStateCode] = useState("");
+
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
@@ -28,10 +56,29 @@ export default function CheckoutForm({ recaptchaSiteKey }: CheckoutFormProps) {
     pincode: "",
   });
 
+  const states = useMemo(() => State.getStatesOfCountry("IN"), []);
+  const cities = useMemo(() => {
+    return selectedStateCode ? City.getCitiesOfState("IN", selectedStateCode) : [];
+  }, [selectedStateCode]);
+
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
     setError("");
+    setFieldErrors({});
+
+    // Validate form data
+    const result = checkoutSchema.safeParse(formData);
+    if (!result.success) {
+      const formattedErrors: ValidationErrors = {};
+      result.error.issues.forEach((issue) => {
+        const path = issue.path[0] as keyof ValidationErrors;
+        formattedErrors[path] = issue.message;
+      });
+      setFieldErrors(formattedErrors);
+      setLoading(false);
+      return;
+    }
 
     const cart = getCart();
     if (cart.length === 0) {
@@ -88,6 +135,31 @@ export default function CheckoutForm({ recaptchaSiteKey }: CheckoutFormProps) {
       ...formData,
       [e.target.name]: e.target.value,
     });
+    // Clear error when user starts typing
+    if (fieldErrors[e.target.name as keyof ValidationErrors]) {
+      setFieldErrors((prev) => ({ ...prev, [e.target.name]: undefined }));
+    }
+  };
+
+  const handleStateChange = (value: string) => {
+    const selectedState = states.find((s) => s.isoCode === value);
+    if (selectedState) {
+      setSelectedStateCode(value);
+      setFormData((prev) => ({
+        ...prev,
+        state: selectedState.name,
+        city: "", // Reset city when state changes
+      }));
+      setFieldErrors((prev) => ({ ...prev, state: undefined, city: undefined }));
+    }
+  };
+
+  const handleCityChange = (value: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      city: value,
+    }));
+    setFieldErrors((prev) => ({ ...prev, city: undefined }));
   };
 
   return (
@@ -114,11 +186,14 @@ export default function CheckoutForm({ recaptchaSiteKey }: CheckoutFormProps) {
               type="text"
               id="name"
               name="name"
-              required
               value={formData.name}
               onChange={handleChange}
               placeholder="Enter your full name"
+              className={fieldErrors.name ? "border-red-500" : ""}
             />
+            {fieldErrors.name && (
+              <span className="text-xs text-red-500 mt-1">{fieldErrors.name}</span>
+            )}
           </Field>
 
           <Field>
@@ -129,16 +204,20 @@ export default function CheckoutForm({ recaptchaSiteKey }: CheckoutFormProps) {
               type="tel"
               id="phone"
               name="phone"
-              required
               value={formData.phone}
               onChange={handleChange}
               placeholder="Enter your phone number"
+              className={fieldErrors.phone ? "border-red-500" : ""}
+              maxLength={10}
             />
+            {fieldErrors.phone && (
+              <span className="text-xs text-red-500 mt-1">{fieldErrors.phone}</span>
+            )}
           </Field>
 
           <Field>
             <FieldLabel htmlFor="email" className="uppercase text-xs">
-              Email (Optional)
+              Email *
             </FieldLabel>
             <Input
               type="email"
@@ -147,7 +226,11 @@ export default function CheckoutForm({ recaptchaSiteKey }: CheckoutFormProps) {
               value={formData.email}
               onChange={handleChange}
               placeholder="Enter your email address"
+              className={fieldErrors.email ? "border-red-500" : ""}
             />
+            {fieldErrors.email && (
+              <span className="text-xs text-red-500 mt-1">{fieldErrors.email}</span>
+            )}
           </Field>
 
           <Field>
@@ -157,44 +240,64 @@ export default function CheckoutForm({ recaptchaSiteKey }: CheckoutFormProps) {
             <textarea
               id="address"
               name="address"
-              required
               value={formData.address}
               onChange={handleChange}
               rows={3}
-              className="flex min-h-[80px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-base shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+              className={`flex min-h-[80px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-base shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm ${
+                fieldErrors.address ? "border-red-500" : ""
+              }`}
               placeholder="Enter your complete delivery address"
             />
+            {fieldErrors.address && (
+              <span className="text-xs text-red-500 mt-1">{fieldErrors.address}</span>
+            )}
           </Field>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field>
-              <FieldLabel htmlFor="city" className="uppercase text-xs">
-                City *
-              </FieldLabel>
-              <Input
-                type="text"
-                id="city"
-                name="city"
-                required
-                value={formData.city}
-                onChange={handleChange}
-                placeholder="Enter city"
-              />
-            </Field>
-
-            <Field>
               <FieldLabel htmlFor="state" className="uppercase text-xs">
                 State *
               </FieldLabel>
-              <Input
-                type="text"
-                id="state"
-                name="state"
-                required
-                value={formData.state}
-                onChange={handleChange}
-                placeholder="Enter state"
-              />
+              <Select onValueChange={handleStateChange} value={selectedStateCode}>
+                <SelectTrigger className={fieldErrors.state ? "border-red-500" : ""}>
+                  <SelectValue placeholder="Select State" />
+                </SelectTrigger>
+                <SelectContent>
+                  {states.map((state) => (
+                    <SelectItem key={state.isoCode} value={state.isoCode}>
+                      {state.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {fieldErrors.state && (
+                <span className="text-xs text-red-500 mt-1">{fieldErrors.state}</span>
+              )}
+            </Field>
+
+            <Field>
+              <FieldLabel htmlFor="city" className="uppercase text-xs">
+                City *
+              </FieldLabel>
+              <Select 
+                onValueChange={handleCityChange} 
+                value={formData.city} 
+                disabled={!selectedStateCode}
+              >
+                <SelectTrigger className={fieldErrors.city ? "border-red-500" : ""}>
+                  <SelectValue placeholder={selectedStateCode ? "Select City" : "Select State First"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {cities.map((city) => (
+                    <SelectItem key={city.name} value={city.name}>
+                      {city.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {fieldErrors.city && (
+                <span className="text-xs text-red-500 mt-1">{fieldErrors.city}</span>
+              )}
             </Field>
           </div>
 
@@ -206,12 +309,15 @@ export default function CheckoutForm({ recaptchaSiteKey }: CheckoutFormProps) {
               type="text"
               id="pincode"
               name="pincode"
-              required
               value={formData.pincode}
               onChange={handleChange}
               placeholder="Enter pincode"
               maxLength={6}
+              className={fieldErrors.pincode ? "border-red-500" : ""}
             />
+            {fieldErrors.pincode && (
+              <span className="text-xs text-red-500 mt-1">{fieldErrors.pincode}</span>
+            )}
           </Field>
 
           <div className="pt-4">
