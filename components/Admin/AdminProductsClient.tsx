@@ -38,6 +38,14 @@ interface AdminProductsClientProps {
   initialProducts: Product[];
 }
 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"; // Fixed: Moved import to top level
+
 export default function AdminProductsClient({
   initialProducts,
 }: AdminProductsClientProps) {
@@ -49,18 +57,39 @@ export default function AdminProductsClient({
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [stockFilter, setStockFilter] = useState<string>("all");
+  
+  // States for filter dropdowns
+  const [categories, setCategories] = useState<any[]>([]);
+
   const [selectedProducts, setSelectedProducts] = useState<Set<string>>(
     new Set()
   );
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  
+  // Fetch categories for filter
+  useEffect(() => {
+    fetch("/api/categories")
+      .then((res) => res.json())
+      .then((data) => setCategories(data || []))
+      .catch((err) => console.error("Error fetching categories:", err));
+  }, []);
 
   const fetchProducts = async (page = 1) => {
     setLoading(true);
     try {
-      const response = await fetch(
-        `/api/products?page=${page}&limit=20`
-      );
+      const queryParams = new URLSearchParams({
+        page: page.toString(),
+        limit: "20",
+      });
+      
+      if (searchQuery) queryParams.append("search", searchQuery);
+      if (selectedCategory && selectedCategory !== "all") queryParams.append("category", selectedCategory);
+      if (stockFilter && stockFilter !== "all") queryParams.append("stockStatus", stockFilter);
+
+      const response = await fetch(`/api/products?${queryParams}`);
       const data = await response.json();
       setProducts(data.products || []);
       setTotalPages(data.pagination?.pages || 1);
@@ -71,6 +100,14 @@ export default function AdminProductsClient({
       setLoading(false);
     }
   };
+  
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchProducts(1);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchQuery, selectedCategory, stockFilter]);
 
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this product?")) return;
@@ -111,18 +148,8 @@ export default function AdminProductsClient({
     }, 0);
   };
 
-  // Filter products based on search query
-  const filteredProducts = useMemo(() => {
-    if (!searchQuery.trim()) return products;
-
-    const query = searchQuery.toLowerCase();
-    return products.filter(
-      (product) =>
-        product.title.toLowerCase().includes(query) ||
-        product.description.toLowerCase().includes(query) ||
-        product.category.toLowerCase().includes(query)
-    );
-  }, [products, searchQuery]);
+  // Filter products based on search query (Now handled by API)
+  const filteredProducts = products;
 
   // Handle select all
   const handleSelectAll = (checked: boolean) => {
@@ -217,9 +244,43 @@ export default function AdminProductsClient({
                   placeholder="Search products..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 w-full"
                 />
               </div>
+              
+              <div className="flex gap-2 w-full lg:w-auto">
+                <Select
+                  value={selectedCategory}
+                  onValueChange={(value) => setSelectedCategory(value)}
+                >
+                  <SelectTrigger className="w-full lg:w-[180px]">
+                    <SelectValue placeholder="Category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Categories</SelectItem>
+                    {categories.map((cat) => (
+                      <SelectItem key={cat._id} value={cat.name}>
+                        {cat.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                <Select
+                  value={stockFilter}
+                  onValueChange={(value) => setStockFilter(value)}
+                >
+                  <SelectTrigger className="w-full lg:w-[180px]">
+                    <SelectValue placeholder="Stock Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Status</SelectItem>
+                    <SelectItem value="in_stock">In Stock</SelectItem>
+                    <SelectItem value="low_stock">Low Stock (&lt; 10)</SelectItem>
+                    <SelectItem value="out_of_stock">Out of Stock</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
               {selectedProducts.size > 0 && (
                 <Button
                   variant="destructive"

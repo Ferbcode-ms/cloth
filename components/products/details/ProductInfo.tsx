@@ -258,7 +258,7 @@ const getColorValue = (colorName: string): string => {
                     }}
                     disabled={isOutOfStock}
                     className={cn(
-                      "relative h-11 w-14 rounded border transition-all duration-200 flex items-center justify-center",
+                      "relative h-11 min-w-14 w-auto px-3 rounded border transition-all duration-200 flex items-center justify-center",
                       isSelected
                         ? "border-foreground bg-foreground text-background"
                         : "border-border hover:border-foreground/50",

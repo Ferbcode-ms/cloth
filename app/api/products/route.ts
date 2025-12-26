@@ -9,30 +9,91 @@ export async function GET(request: NextRequest) {
   try {
     await connectDB();
 
+    await connectDB();
+
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "12");
     const category = searchParams.get("category");
+    const stockStatus = searchParams.get("stockStatus");
+    const search = searchParams.get("search");
     const skip = (page - 1) * limit;
 
-    const query: any = {};
+    // Build Match Stage
+    const matchStage: any = {};
+    
     if (category) {
-      query.category = category;
+      matchStage.category = category;
     }
 
-    const products = await Product.find(query)
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit)
-      .lean();
+    if (search) {
+      matchStage.$or = [
+        { title: { $regex: search, $options: "i" } },
+        { description: { $regex: search, $options: "i" } },
+        { category: { $regex: search, $options: "i" } },
+      ];
+    }
 
-    const total = await Product.countDocuments(query);
+    // Build Pipeline
+    const pipeline: any[] = [
+      { $match: matchStage },
+      // Calculate total stock for filtering
+      {
+        $addFields: {
+          totalStock: {
+            $reduce: {
+              input: "$variants",
+              initialValue: 0,
+              in: {
+                $add: [
+                  "$$value",
+                  {
+                    $reduce: {
+                      input: "$$this.sizes",
+                      initialValue: 0,
+                      in: { $add: ["$$value", "$$this.stock"] },
+                    },
+                  },
+                ],
+              },
+            },
+          },
+        },
+      },
+      // Sort by newest first
+      { $sort: { createdAt: -1 } },
+    ];
 
-    // Fetch all categories to apply category-level discounts
+    // Apply Stock Status Filter
+    if (stockStatus) {
+      if (stockStatus === "out_of_stock") {
+        pipeline.push({ $match: { totalStock: 0 } });
+      } else if (stockStatus === "low_stock") {
+        pipeline.push({ $match: { totalStock: { $gt: 0, $lt: 10 } } });
+      } else if (stockStatus === "in_stock") {
+        pipeline.push({ $match: { totalStock: { $gte: 10 } } });
+      }
+    }
+
+    // Pagination Facet
+    pipeline.push({
+      $facet: {
+        metadata: [{ $count: "total" }],
+        products: [{ $skip: skip }, { $limit: limit }],
+      },
+    });
+
+    const result = await Product.aggregate(pipeline);
+    
+    const products = result[0].products;
+    const total = result[0].metadata[0]?.total || 0;
+
+    // calculate discounts like before
     const categories = await Category.find({}).select("name discount discountType").lean();
     const categoryMap = new Map(categories.map((c: any) => [c.name, c]));
 
     const productsWithDiscounts = products.map((product: any) => {
+      // Since aggregate return plain objects, we don't need .lean() logic here
       return calculateProductPrice(product, categoryMap);
     });
 

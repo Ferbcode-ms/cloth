@@ -83,7 +83,15 @@ export default function ProductForm({
 
         setCategories(categoriesData || []);
         setColors(colorsData || []);
-        setSizes(sizesData || []);
+        // Add "One Size" option manually so it's always available
+        const fetchedSizes = sizesData || [];
+        const hasOneSize = fetchedSizes.some((s: any) => s.value === "One Size" || s.name === "One Size");
+        
+        if (!hasOneSize) {
+          fetchedSizes.unshift({ _id: "one-size-manual", name: "One Size", value: "One Size" });
+        }
+        
+        setSizes(fetchedSizes);
       } catch (error) {
         console.error("Error fetching data:", error);
       }
