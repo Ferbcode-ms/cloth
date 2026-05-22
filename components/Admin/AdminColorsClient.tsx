@@ -55,7 +55,13 @@ export default function AdminColorsClient({
     try {
       const response = await fetch("/api/colors");
       const data = await response.json();
-      setColors(data || []);
+      const mapped = (data || []).map((c: any) => ({
+        ...c,
+        _id: c.id,
+        createdAt: c.created_at,
+        updatedAt: c.updated_at,
+      }));
+      setColors(mapped);
     } catch (error) {
       console.error("Error fetching colors:", error);
     } finally {

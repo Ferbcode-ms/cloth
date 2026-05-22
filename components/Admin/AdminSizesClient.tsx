@@ -54,7 +54,13 @@ export default function AdminSizesClient({
     try {
       const response = await fetch("/api/sizes");
       const data = await response.json();
-      setSizes(data || []);
+      const mapped = (data || []).map((s: any) => ({
+        ...s,
+        _id: s.id,
+        createdAt: s.created_at,
+        updatedAt: s.updated_at,
+      }));
+      setSizes(mapped);
     } catch (error) {
       console.error("Error fetching sizes:", error);
     } finally {

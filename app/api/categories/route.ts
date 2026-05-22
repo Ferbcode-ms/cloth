@@ -1,13 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
-import connectDB from "@/lib/db";
-import Category from "@/lib/models/Category";
+import { supabase } from "@/lib/supabase";
 import { verifyAuth } from "@/lib/utils/auth";
 
 // GET all categories
 export async function GET(request: NextRequest) {
   try {
-    await connectDB();
-    const categories = await Category.find().sort({ name: 1 }).lean();
+    const { data: categories, error } = await supabase
+      .from("categories")
+      .select("*")
+      .order("name", { ascending: true });
+
+    if (error) throw error;
     return NextResponse.json(categories);
   } catch (error: any) {
     console.error("Error fetching categories:", error);
@@ -26,7 +29,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    await connectDB();
     const body = await request.json();
     const { name, subcategories, image, discount, discountType } = body;
 
@@ -43,9 +45,13 @@ export async function POST(request: NextRequest) {
       .replace(/(^-|-$)/g, "");
 
     // Check if category with same name or slug exists
-    const existing = await Category.findOne({
-      $or: [{ name }, { slug }],
-    });
+    const { data: existing, error: findError } = await supabase
+      .from("categories")
+      .select("*")
+      .or(`name.eq."${name}",slug.eq."${slug}"`)
+      .maybeSingle();
+
+    if (findError) throw findError;
 
     if (existing) {
       return NextResponse.json(
@@ -68,16 +74,21 @@ export async function POST(request: NextRequest) {
       return sub;
     });
 
-    const category = new Category({
-      name,
-      slug,
-      image: image || undefined,
-      subcategories: processedSubcategories,
-      discount: discount || 0,
-      discountType: discountType || "percentage",
-    });
+    const { data: category, error: insertError } = await supabase
+      .from("categories")
+      .insert({
+        name,
+        slug,
+        image: image || null,
+        subcategories: processedSubcategories,
+        discount: discount || 0,
+        discount_type: discountType || "percentage",
+      })
+      .select()
+      .single();
 
-    await category.save();
+    if (insertError) throw insertError;
+
     return NextResponse.json(category, { status: 201 });
   } catch (error: any) {
     console.error("Error creating category:", error);

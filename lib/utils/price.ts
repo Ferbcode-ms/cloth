@@ -31,27 +31,28 @@ export function calculateProductPrice(product: any, categoryMap: Map<string, any
     appliedDiscountType = updatedProduct.discountType || "percentage";
     
     if (appliedDiscountType === "fixed") {
-      discountAmount = appliedDiscount;
+      discountAmount += appliedDiscount;
     } else {
-      discountAmount = (updatedProduct.price * appliedDiscount) / 100;
+      discountAmount += (updatedProduct.price * appliedDiscount) / 100;
     }
   } 
-  // 2. Check Category Discount (only if no product discount)
-  else if (updatedProduct.category && categoryMap.has(updatedProduct.category)) {
+
+  // 2. Check Category Discount (always check, so we can add it to individual discount)
+  if (updatedProduct.category && categoryMap.has(updatedProduct.category)) {
     const cat = categoryMap.get(updatedProduct.category);
     if (cat && cat.discount > 0) {
       hasDiscount = true;
-      appliedDiscount = cat.discount;
-      appliedDiscountType = cat.discountType || "percentage";
+      const catDiscount = cat.discount;
+      const catDiscountType = cat.discountType || "percentage";
       
-      // Attach discount info to product so UI can display it
-      updatedProduct.discount = appliedDiscount;
-      updatedProduct.discountType = appliedDiscountType;
+      // Attach category discount info to product so UI can display it without bleeding into product discount
+      updatedProduct.categoryDiscount = catDiscount;
+      updatedProduct.categoryDiscountType = catDiscountType;
 
-      if (appliedDiscountType === "fixed") {
-        discountAmount = appliedDiscount;
+      if (catDiscountType === "fixed") {
+        discountAmount += catDiscount;
       } else {
-        discountAmount = (updatedProduct.price * appliedDiscount) / 100;
+        discountAmount += (updatedProduct.price * catDiscount) / 100;
       }
     }
   }

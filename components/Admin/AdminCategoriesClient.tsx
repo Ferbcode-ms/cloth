@@ -67,7 +67,14 @@ export default function AdminCategoriesClient({
     try {
       const response = await fetch("/api/categories");
       const data = await response.json();
-      setCategories(data || []);
+      const mapped = (data || []).map((c: any) => ({
+        ...c,
+        _id: c.id,
+        discountType: c.discount_type,
+        createdAt: c.created_at,
+        updatedAt: c.updated_at,
+      }));
+      setCategories(mapped);
     } catch (error) {
       console.error("Error fetching categories:", error);
     } finally {

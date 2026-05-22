@@ -1,9 +1,6 @@
 import { Suspense } from "react";
 import { Metadata } from "next";
-import connectDB from "@/lib/db";
-import Product from "@/lib/models/Product";
-import Category from "@/lib/models/Category";
-import Slider from "@/lib/models/Slider";
+import { supabase } from "@/lib/supabase";
 import ProductCardSkeleton from "@/components/products/ProductCardSkeleton";
 import CategoryCardSkeleton from "@/components/products/CategoryCardSkeleton";
 import HeroSection from "@/components/home/HeroSection";
@@ -13,7 +10,6 @@ import CategoriesSection from "@/components/home/CategoriesSection";
 import NewArrivalsSection from "@/components/home/NewArrivalsSection";
 import CategoryProductsSection from "@/components/home/CategoryProductsSection";
 import { calculateProductPrice } from "@/lib/utils/price";
-
 
 export const revalidate = 3600; // Revalidate every hour
 
@@ -29,16 +25,60 @@ export const metadata: Metadata = {
   },
 };
 
+function mapProduct(p: any) {
+  if (!p) return p;
+  return {
+    ...p,
+    _id: p.id,
+    discountType: p.discount_type,
+    orderCount: p.order_count,
+    totalStock: p.total_stock,
+    createdAt: p.created_at,
+    updatedAt: p.updated_at,
+  };
+}
+
+function mapCategory(c: any) {
+  if (!c) return c;
+  return {
+    ...c,
+    _id: c.id,
+    discountType: c.discount_type,
+    createdAt: c.created_at,
+    updatedAt: c.updated_at,
+  };
+}
+
+function mapSlider(s: any) {
+  if (!s) return s;
+  return {
+    ...s,
+    _id: s.id,
+    imageUrl: s.image_url,
+    isActive: s.is_active,
+    createdAt: s.created_at,
+    updatedAt: s.updated_at,
+  };
+}
+
 async function getNewArrivals() {
   try {
-    await connectDB();
-    const products = await Product.find()
-      .sort({ createdAt: -1 })
-      .limit(4)
-      .lean();
+    const { data: rawProducts, error: productsError } = await supabase
+      .from("products")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(4);
+
+    if (productsError) throw productsError;
+
+    const products = (rawProducts || []).map(mapProduct);
 
     // Fetch categories for discount calculation
-    const categories = await Category.find({}).select("name discount discountType").lean();
+    const { data: rawCategories } = await supabase
+      .from("categories")
+      .select("name, discount, discount_type");
+
+    const categories = (rawCategories || []).map(mapCategory);
     const categoryMap = new Map(categories.map((c: any) => [c.name, c]));
 
     const productsWithDiscounts = products.map((product: any) => {
@@ -47,49 +87,62 @@ async function getNewArrivals() {
 
     return JSON.parse(JSON.stringify(productsWithDiscounts));
   } catch (error) {
-    console.error("Error fetching new arrivals:", error);
+    console.error("Error fetching new arrivals:", (error as any)?.message || error);
     return [];
   }
 }
 
 async function getCategories() {
   try {
-    await connectDB();
-    const categories = await Category.find()
-      .sort({ name: 1 })
-      .limit(4)
-      .lean();
-    return JSON.parse(JSON.stringify(categories));
+    const { data: rawCategories, error } = await supabase
+      .from("categories")
+      .select("*")
+      .order("name", { ascending: true })
+      .limit(4);
+
+    if (error) throw error;
+    return JSON.parse(JSON.stringify((rawCategories || []).map(mapCategory)));
   } catch (error) {
-    console.error("Error fetching categories:", error);
+    console.error("Error fetching categories:", (error as any)?.message || error);
     return [];
   }
 }
 
-
 async function getSliders() {
   try {
-    await connectDB();
-    const sliders = await Slider.find({ isActive: true })
-      .sort({ order: 1 })
-      .lean();
-    return JSON.parse(JSON.stringify(sliders));
+    const { data: rawSliders, error } = await supabase
+      .from("sliders")
+      .select("*")
+      .eq("is_active", true)
+      .order("order", { ascending: true });
+
+    if (error) throw error;
+    return JSON.parse(JSON.stringify((rawSliders || []).map(mapSlider)));
   } catch (error) {
-    console.error("Error fetching sliders:", error);
+    console.error("Error fetching sliders:", (error as any)?.message || error);
     return [];
   }
 }
 
 async function getCategoryProducts(categoryName: string, limit: number = 6) {
   try {
-    await connectDB();
-    const products = await Product.find({ category: categoryName })
-      .sort({ createdAt: -1 })
-      .limit(limit)
-      .lean();
+    const { data: rawProducts, error: productsError } = await supabase
+      .from("products")
+      .select("*")
+      .eq("category", categoryName)
+      .order("created_at", { ascending: false })
+      .limit(limit);
+
+    if (productsError) throw productsError;
+
+    const products = (rawProducts || []).map(mapProduct);
 
     // Fetch categories for discount calculation
-    const categories = await Category.find({}).select("name discount discountType").lean();
+    const { data: rawCategories } = await supabase
+      .from("categories")
+      .select("name, discount, discount_type");
+
+    const categories = (rawCategories || []).map(mapCategory);
     const categoryMap = new Map(categories.map((c: any) => [c.name, c]));
 
     const productsWithDiscounts = products.map((product: any) => {
@@ -98,20 +151,20 @@ async function getCategoryProducts(categoryName: string, limit: number = 6) {
 
     return JSON.parse(JSON.stringify(productsWithDiscounts));
   } catch (error) {
-    console.error(`Error fetching ${categoryName} products:`, error);
+    console.error(`Error fetching ${categoryName} products:`, (error as any)?.message || error);
     return [];
   }
 }
 
 export default async function Home() {
-  await connectDB();
-  
   // First, fetch categories to get their names
-  const allCategories = await Category.find()
-    .sort({ name: 1 })
-    .limit(3)
-    .lean();
-  const categoryNames = allCategories.map((cat: any) => cat.name);
+  const { data: rawAllCategories } = await supabase
+    .from("categories")
+    .select("name")
+    .order("name", { ascending: true })
+    .limit(3);
+
+  const categoryNames = (rawAllCategories || []).map((cat: any) => cat.name);
 
   const newArrivalsData = getNewArrivals();
   const categoriesData = getCategories();

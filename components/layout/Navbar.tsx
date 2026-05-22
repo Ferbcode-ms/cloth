@@ -89,7 +89,11 @@ export default function Navbar() {
         const catRes = await fetch("/api/categories");
         if (catRes.ok) {
           const catData = await catRes.json();
-          setCategories(catData || []);
+          const mapped = (catData || []).map((c: any) => ({
+            ...c,
+            _id: c.id,
+          }));
+          setCategories(mapped);
         }
 
         // Fetch products (limit to recent 8 products)

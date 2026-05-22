@@ -1,8 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import connectDB from "@/lib/db";
-import Order from "@/lib/models/Order";
-import Product from "@/lib/models/Product";
-import mongoose from "mongoose";
+import { supabase } from "@/lib/supabase";
 
 async function verifyRecaptcha(token: string): Promise<boolean> {
   const secretKey = process.env.RECAPTCHA_SECRET_KEY;
@@ -33,8 +30,6 @@ async function verifyRecaptcha(token: string): Promise<boolean> {
 
 export async function POST(request: NextRequest) {
   try {
-    await connectDB();
-
     const body = await request.json();
     const { items, customer, recaptchaToken } = body;
 
@@ -48,7 +43,6 @@ export async function POST(request: NextRequest) {
         );
       }
     }
-    // If no token provided, skip reCAPTCHA verification (for development/localhost)
 
     // Validate required fields
     if (!items || !Array.isArray(items) || items.length === 0) {
@@ -76,11 +70,16 @@ export async function POST(request: NextRequest) {
     // Validate items and check stock (first pass - validation only)
     let totalAmount = 0;
     const validatedItems = [];
-    const itemsToProcess = [];
 
     for (const item of items) {
-      const product = await Product.findById(item.productId);
-      if (!product) {
+      // Fetch product by ID
+      const { data: product, error: fetchError } = await supabase
+        .from("products")
+        .select("*")
+        .eq("id", item.productId)
+        .maybeSingle();
+
+      if (fetchError || !product) {
         return NextResponse.json(
           { error: `Product ${item.productId} not found` },
           { status: 400 }
@@ -118,101 +117,40 @@ export async function POST(request: NextRequest) {
       totalAmount += product.price * item.quantity;
 
       validatedItems.push({
-        productId: (product._id as any).toString(),
+        productId: product.id,
         title: product.title,
         price: product.price,
         quantity: item.quantity,
         color: item.color,
         size: item.size,
       });
-
-      // Store item data for stock update
-      itemsToProcess.push(item);
     }
 
-    // Use MongoDB session for transaction to ensure atomicity
-    const session = await mongoose.startSession();
-    session.startTransaction();
-
-    try {
-      // Deduct stock for all items (within transaction)
-      for (const item of itemsToProcess) {
-        // Refetch product within session for transaction
-        const product = await Product.findById(item.productId).session(session);
-        if (!product) {
-          await session.abortTransaction();
-          session.endSession();
-          return NextResponse.json(
-            { error: `Product ${item.productId} not found` },
-            { status: 400 }
-          );
-        }
-
-        const variant = product.variants.find(
-          (v: any) => v.color === item.color
-        );
-        if (!variant) {
-          await session.abortTransaction();
-          session.endSession();
-          return NextResponse.json(
-            { error: `Variant not found for product ${product.title}` },
-            { status: 400 }
-          );
-        }
-
-        const sizeVariant = variant.sizes.find(
-          (s: any) => s.size === item.size
-        );
-        if (!sizeVariant) {
-          await session.abortTransaction();
-          session.endSession();
-          return NextResponse.json(
-            { error: `Size ${item.size} not available for ${product.title}` },
-            { status: 400 }
-          );
-        }
-
-        // Double-check stock before deducting (prevent race condition)
-        if (sizeVariant.stock < item.quantity) {
-          await session.abortTransaction();
-          session.endSession();
-          return NextResponse.json(
-            {
-              error: `Insufficient stock for ${product.title} - ${item.color} - ${item.size}. Available: ${sizeVariant.stock}`,
-            },
-            { status: 400 }
-          );
-        }
-
-        // Deduct stock
-        sizeVariant.stock -= item.quantity;
-        await product.save({ session });
+    // Call PostgreSQL atomic transaction function in Supabase
+    const { data: txResult, error: txError } = await supabase.rpc(
+      "place_order_transaction",
+      {
+        p_items: validatedItems,
+        p_customer: customer,
+        p_total_amount: totalAmount,
       }
+    );
 
-      // Create order
-      const order = new Order({
-        items: validatedItems,
-        customer,
-        totalAmount,
-        status: "Pending",
-      });
-
-      await order.save({ session });
-
-      // Commit transaction
-      await session.commitTransaction();
-      session.endSession();
-
-      return NextResponse.json(
-        { order: { id: order._id, totalAmount: order.totalAmount } },
-        { status: 201 }
-      );
-    } catch (transactionError: any) {
-      // Rollback transaction on error
-      await session.abortTransaction();
-      session.endSession();
-      throw transactionError;
+    if (txError) {
+      throw txError;
     }
+
+    if (txResult && txResult.success === false) {
+      return NextResponse.json(
+        { error: txResult.error || "Failed to place order due to stock or validation issue" },
+        { status: 400 }
+      );
+    }
+
+    return NextResponse.json(
+      { order: { id: txResult.orderId, totalAmount } },
+      { status: 201 }
+    );
   } catch (error: any) {
     console.error("Error creating order:", error);
     return NextResponse.json(

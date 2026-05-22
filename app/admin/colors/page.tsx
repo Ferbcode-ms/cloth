@@ -1,14 +1,27 @@
 import { Suspense } from "react";
 import AdminColorsClient from "@/components/Admin/AdminColorsClient";
-import connectDB from "@/lib/db";
-import Color from "@/lib/models/Color";
+import { supabase } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
 
+function mapColor(c: any) {
+  if (!c) return c;
+  return {
+    ...c,
+    _id: c.id,
+    createdAt: c.created_at,
+    updatedAt: c.updated_at,
+  };
+}
+
 async function getColors() {
-  await connectDB();
-  const colors = await Color.find().sort({ name: 1 }).lean();
-  return JSON.parse(JSON.stringify(colors));
+  const { data: rawColors, error } = await supabase
+    .from("colors")
+    .select("*")
+    .order("name", { ascending: true });
+
+  if (error) throw error;
+  return JSON.parse(JSON.stringify((rawColors || []).map(mapColor)));
 }
 
 export default async function AdminColorsPage() {
@@ -20,4 +33,3 @@ export default async function AdminColorsPage() {
     </Suspense>
   );
 }
-

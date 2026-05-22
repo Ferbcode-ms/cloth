@@ -7,13 +7,9 @@ import ProductsClient from "@/components/products/ProductsClient";
 import ProductsFiltersSkeleton from "@/components/products/ProductsFiltersSkeleton";
 import ProductsGridSkeleton from "@/components/products/ProductsGridSkeleton";
 import ProductsSearchBar from "@/components/products/ProductsSearchBar";
-import connectDB from "@/lib/db";
-import Product from "@/lib/models/Product";
-import Category from "@/lib/models/Category";
-import Color from "@/lib/models/Color";
-import Size from "@/lib/models/Size";
+import { supabase } from "@/lib/supabase";
 import { calculateProductPrice } from "@/lib/utils/price";
-import type { SortOrder } from "mongoose";
+import { Metadata } from "next";
 
 export const revalidate = 3600; // Revalidate every hour
 
@@ -26,8 +22,6 @@ type ProductsPageSearchParams = {
   sort?: string | string[];
   search?: string | string[];
 };
-
-import { Metadata } from "next";
 
 interface ProductsPageProps {
   searchParams: Promise<ProductsPageSearchParams>;
@@ -71,37 +65,49 @@ export async function generateMetadata({
   };
 }
 
-const buildSortQuery = (
-  sort: string,
-  useTextSearch: boolean
-): Record<string, SortOrder | { $meta: string }> => {
-  if (useTextSearch && sort === "most-popular") {
-    return { score: { $meta: "textScore" }, createdAt: -1 };
-  }
+function mapProduct(p: any) {
+  if (!p) return p;
+  return {
+    ...p,
+    _id: p.id,
+    discountType: p.discount_type,
+    orderCount: p.order_count,
+    totalStock: p.total_stock,
+    createdAt: p.created_at,
+    updatedAt: p.updated_at,
+  };
+}
 
-  if (sort === "price-low") {
-    return { price: 1 };
-  }
+function mapCategory(c: any) {
+  if (!c) return c;
+  return {
+    ...c,
+    _id: c.id,
+    discountType: c.discount_type,
+    createdAt: c.created_at,
+    updatedAt: c.updated_at,
+  };
+}
 
-  if (sort === "price-high") {
-    return { price: -1 };
-  }
+function mapColor(c: any) {
+  if (!c) return c;
+  return {
+    ...c,
+    _id: c.id,
+    createdAt: c.created_at,
+    updatedAt: c.updated_at,
+  };
+}
 
-  if (sort === "newest") {
-    return { createdAt: -1 };
-  }
-
-  return { createdAt: -1 };
-};
-
-const isTextIndexError = (error: unknown) => {
-  if (!error || typeof error !== "object") return false;
-  const err = error as { code?: number; message?: string };
-  return (
-    err.code === 27 ||
-    err.message?.toLowerCase().includes("text index required")
-  );
-};
+function mapSize(s: any) {
+  if (!s) return s;
+  return {
+    ...s,
+    _id: s.id,
+    createdAt: s.created_at,
+    updatedAt: s.updated_at,
+  };
+}
 
 async function getProducts(
   page: number = 1,
@@ -115,119 +121,61 @@ async function getProducts(
   } = {}
 ) {
   try {
-    const limit = 16; // Changed to 9 to match 3x3 grid
+    const limit = 16;
     const skip = (page - 1) * limit;
 
-    const query: any = {};
-    const projection: Record<string, any> = {
-      title: 1,
-      description: 1,
-      price: 1,
-      images: 1,
-      slug: 1,
-      category: 1,
-      subcategory: 1,
-      variants: 1,
-      createdAt: 1,
-      orderCount: 1,
-      discount: 1,
-      discountType: 1,
-    };
+    let dbQuery = supabase.from("products").select("*", { count: "exact" });
 
     if (filters.category) {
-      query.category = filters.category;
+      dbQuery = dbQuery.eq("category", filters.category);
     }
 
     if (filters.subcategory) {
-      query.subcategory = filters.subcategory;
+      dbQuery = dbQuery.eq("subcategory", filters.subcategory);
     }
 
     if (filters.colors && filters.colors.length > 0) {
-      query["variants.color"] = { $in: filters.colors };
+      dbQuery = dbQuery.overlaps("colors", filters.colors);
     }
 
     if (filters.sizes && filters.sizes.length > 0) {
-      query["variants.sizes.size"] = { $in: filters.sizes };
+      dbQuery = dbQuery.overlaps("sizes", filters.sizes);
     }
 
     const searchTerm = filters.search?.trim();
-    let useTextSearch = Boolean(searchTerm && searchTerm.length >= 2);
-    const regexConditions =
-      searchTerm && searchTerm.length > 0
-        ? [
-            { title: { $regex: searchTerm, $options: "i" } },
-            { description: { $regex: searchTerm, $options: "i" } },
-          ]
-        : null;
-
-    if (useTextSearch) {
-      query.$text = { $search: searchTerm };
-      projection.score = { $meta: "textScore" };
-    } else if (regexConditions) {
-      query.$or = regexConditions;
+    if (searchTerm && searchTerm.length > 0) {
+      dbQuery = dbQuery.or(
+        `title.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%,category.ilike.%${searchTerm}%`
+      );
     }
 
     const selectedSort = filters.sort || "most-popular";
-
-    const runQuery = () =>
-      Promise.all([
-        Product.find(query)
-          .sort(buildSortQuery(selectedSort, useTextSearch))
-          .skip(skip)
-          .limit(limit)
-          .select(projection)
-          .lean(),
-        Product.countDocuments(query),
-      ]);
-
-    let result: { products: any[]; total: number };
-
-    try {
-      const [products, total] = await runQuery();
-      result = { products, total };
-    } catch (error) {
-      if (useTextSearch && isTextIndexError(error)) {
-        console.warn(
-          "Full-text search index missing, falling back to regex search."
-        );
-        useTextSearch = false;
-        delete query.$text;
-        delete projection.score;
-        if (regexConditions) {
-          query.$or = regexConditions;
-        }
-        const [fallbackProducts, fallbackTotal] = await Promise.all([
-          Product.find(query)
-            .sort(buildSortQuery(selectedSort, useTextSearch))
-            .skip(skip)
-            .limit(limit)
-            .select(projection)
-            .lean(),
-          Product.countDocuments(query),
-        ]);
-        result = {
-          products: fallbackProducts,
-          total: fallbackTotal,
-        };
-      } else {
-        throw error;
-      }
+    if (selectedSort === "price-low") {
+      dbQuery = dbQuery.order("price", { ascending: true });
+    } else if (selectedSort === "price-high") {
+      dbQuery = dbQuery.order("price", { ascending: false });
+    } else if (selectedSort === "newest") {
+      dbQuery = dbQuery.order("created_at", { ascending: false });
+    } else {
+      dbQuery = dbQuery.order("order_count", { ascending: false });
     }
 
+    const { data: rawProducts, count, error } = await dbQuery.range(skip, skip + limit - 1);
+    if (error) throw error;
+
+    const total = count || 0;
+    const products = (rawProducts || []).map(mapProduct);
+
     // Fetch categories for discount calculation
-    const categories = await Category.find({}).select("name discount discountType").lean();
+    const { data: rawCategories } = await supabase
+      .from("categories")
+      .select("name, discount, discount_type");
+
+    const categories = (rawCategories || []).map(mapCategory);
     const categoryMap = new Map(categories.map((c: any) => [c.name, c]));
 
-    const sanitizedProducts = result.products.map((product: any) => {
-      // Calculate Discount
-      const calculatedProduct = calculateProductPrice(product, categoryMap);
-
-      if ("score" in calculatedProduct) {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { score, ...rest } = calculatedProduct;
-        return rest;
-      }
-      return calculatedProduct;
+    const sanitizedProducts = products.map((product: any) => {
+      return calculateProductPrice(product, categoryMap);
     });
 
     return {
@@ -235,17 +183,17 @@ async function getProducts(
       pagination: {
         page,
         limit,
-        total: result.total,
-        pages: Math.ceil(result.total / limit),
+        total,
+        pages: Math.ceil(total / limit),
       },
     };
   } catch (error) {
-    console.error("Error fetching products:", error);
+    console.error("Error fetching products:", (error as any)?.message || error);
     return {
       products: [],
       pagination: {
         page,
-        limit: 9,
+        limit: 16,
         total: 0,
         pages: 0,
       },
@@ -254,24 +202,22 @@ async function getProducts(
 }
 
 async function getFiltersData() {
-  const [categories, colors, sizes] = await Promise.all([
-    Category.find().sort({ name: 1 }).lean(),
-    Color.find().sort({ name: 1 }).lean(),
-    Size.find().sort({ order: 1, name: 1 }).lean(),
+  const [categoriesRes, colorsRes, sizesRes] = await Promise.all([
+    supabase.from("categories").select("*").order("name", { ascending: true }),
+    supabase.from("colors").select("*").order("name", { ascending: true }),
+    supabase.from("sizes").select("*").order("order", { ascending: true }).order("name", { ascending: true }),
   ]);
 
   return {
-    categories: JSON.parse(JSON.stringify(categories)),
-    colors: JSON.parse(JSON.stringify(colors)),
-    sizes: JSON.parse(JSON.stringify(sizes)),
+    categories: JSON.parse(JSON.stringify((categoriesRes.data || []).map(mapCategory))),
+    colors: JSON.parse(JSON.stringify((colorsRes.data || []).map(mapColor))),
+    sizes: JSON.parse(JSON.stringify((sizesRes.data || []).map(mapSize))),
   };
 }
 
 export default async function ProductsPage({
   searchParams,
 }: ProductsPageProps) {
-  await connectDB();
-
   const params = (await searchParams) ?? {};
 
   const getParamValue = (value?: string | string[]) =>

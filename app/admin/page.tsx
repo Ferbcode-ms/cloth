@@ -1,6 +1,4 @@
-import connectDB from "@/lib/db";
-import Order from "@/lib/models/Order";
-import Product from "@/lib/models/Product";
+import { supabase } from "@/lib/supabase";
 import Link from "next/link";
 import {
   Card,
@@ -15,14 +13,17 @@ import { ShoppingBag, Package, Clock, Plus, Settings, Eye } from "lucide-react";
 export const dynamic = "force-dynamic";
 
 async function getStats() {
-  await connectDB();
-  const [totalOrders, pendingOrders, totalProducts] = await Promise.all([
-    Order.countDocuments(),
-    Order.countDocuments({ status: "Pending" }),
-    Product.countDocuments(),
+  const [totalOrdersRes, pendingOrdersRes, totalProductsRes] = await Promise.all([
+    supabase.from("orders").select("*", { count: "exact", head: true }),
+    supabase.from("orders").select("*", { count: "exact", head: true }).eq("status", "Pending"),
+    supabase.from("products").select("*", { count: "exact", head: true }),
   ]);
 
-  return { totalOrders, pendingOrders, totalProducts };
+  return {
+    totalOrders: totalOrdersRes.count || 0,
+    pendingOrders: pendingOrdersRes.count || 0,
+    totalProducts: totalProductsRes.count || 0,
+  };
 }
 
 export default async function AdminDashboard() {

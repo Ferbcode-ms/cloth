@@ -1,16 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
-import connectDB from "@/lib/db";
-import Product from "@/lib/models/Product";
+import { supabase } from "@/lib/supabase";
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
-    await connectDB();
     const { slug } = await params;
 
-    const product = await Product.findOne({ slug }).lean();
+    const { data: product, error } = await supabase
+      .from("products")
+      .select("*")
+      .eq("slug", slug)
+      .maybeSingle();
+
+    if (error) throw error;
     if (!product) {
       return NextResponse.json({ error: "Product not found" }, { status: 404 });
     }

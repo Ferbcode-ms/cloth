@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import ProductGallery from "@/components/products/details/ProductGallery";
 import ProductInfo from "@/components/products/details/ProductInfo";
+import Reviews from "@/components/products/details/Reviews";
 
 interface ProductDetailClientProps {
   product: {
@@ -53,6 +54,7 @@ export default function ProductDetailClient({
         {/* Product Info */}
         <div className="min-w-0 lg:sticky lg:top-8 lg:self-start">
           <ProductInfo product={product} />
+          <Reviews productId={product._id} />
         </div>
       </div>
     </div>

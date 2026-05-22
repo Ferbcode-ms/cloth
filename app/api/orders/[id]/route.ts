@@ -1,7 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
-import connectDB from "@/lib/db";
-import Order from "@/lib/models/Order";
+import { supabase } from "@/lib/supabase";
 import { verifyAuth } from "@/lib/utils/auth";
+
+function mapOrder(o: any) {
+  if (!o) return o;
+  return {
+    ...o,
+    _id: o.id,
+    totalAmount: Number(o.total_amount),
+    createdAt: o.created_at,
+    updatedAt: o.updated_at,
+  };
+}
 
 export async function GET(
   request: NextRequest,
@@ -13,15 +23,20 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    await connectDB();
     const { id } = await params;
 
-    const order = await Order.findById(id).lean();
+    const { data: order, error } = await supabase
+      .from("orders")
+      .select("*")
+      .eq("id", id)
+      .maybeSingle();
+
+    if (error) throw error;
     if (!order) {
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
 
-    return NextResponse.json({ order });
+    return NextResponse.json({ order: mapOrder(order) });
   } catch (error: any) {
     console.error("Error fetching order:", error);
     return NextResponse.json(
@@ -41,9 +56,7 @@ export async function PUT(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    await connectDB();
     const { id } = await params;
-
     const body = await request.json();
     const { status } = body;
 
@@ -58,15 +71,29 @@ export async function PUT(
       return NextResponse.json({ error: "Invalid status" }, { status: 400 });
     }
 
-    const order = await Order.findById(id);
-    if (!order) {
+    const { data: order, error: getError } = await supabase
+      .from("orders")
+      .select("*")
+      .eq("id", id)
+      .maybeSingle();
+
+    if (getError || !order) {
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
 
-    order.status = status as any;
-    await order.save();
+    const { data: updatedOrder, error: updateError } = await supabase
+      .from("orders")
+      .update({
+        status,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", id)
+      .select()
+      .single();
 
-    return NextResponse.json({ order });
+    if (updateError) throw updateError;
+
+    return NextResponse.json({ order: mapOrder(updatedOrder) });
   } catch (error: any) {
     console.error("Error updating order:", error);
     return NextResponse.json(

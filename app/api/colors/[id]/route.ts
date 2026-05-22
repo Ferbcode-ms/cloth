@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import connectDB from "@/lib/db";
-import Color from "@/lib/models/Color";
+import { supabase } from "@/lib/supabase";
 import { verifyAuth } from "@/lib/utils/auth";
 
 // GET single color
@@ -9,10 +8,14 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await connectDB();
     const { id } = await params;
-    const color = await Color.findById(id).lean();
+    const { data: color, error } = await supabase
+      .from("colors")
+      .select("*")
+      .eq("id", id)
+      .maybeSingle();
 
+    if (error) throw error;
     if (!color) {
       return NextResponse.json({ error: "Color not found" }, { status: 404 });
     }
@@ -38,27 +41,38 @@ export async function PUT(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    await connectDB();
     const { id } = await params;
     const body = await request.json();
     const { name, value, hex } = body;
 
-    const color = await Color.findById(id);
-    if (!color) {
+    const { data: color, error: getError } = await supabase
+      .from("colors")
+      .select("*")
+      .eq("id", id)
+      .maybeSingle();
+
+    if (getError || !color) {
       return NextResponse.json({ error: "Color not found" }, { status: 404 });
     }
 
-    if (name) color.name = name;
-    if (value) color.value = value;
-    if (hex) color.hex = hex;
+    const updateData: any = {};
+    if (name) updateData.name = name;
+    if (value) updateData.value = value;
+    if (hex) updateData.hex = hex;
 
     // Check if another color with same name or value exists
     if (name || value) {
-      const query: any = { _id: { $ne: id } };
-      if (name) query.name = name;
-      if (value) query.value = value;
+      let query = supabase.from("colors").select("id").neq("id", id);
+      if (name && value) {
+        query = query.or(`name.eq."${name}",value.eq."${value}"`);
+      } else if (name) {
+        query = query.eq("name", name);
+      } else if (value) {
+        query = query.eq("value", value);
+      }
 
-      const existing = await Color.findOne(query);
+      const { data: existing, error: findError } = await query.maybeSingle();
+      if (findError) throw findError;
 
       if (existing) {
         return NextResponse.json(
@@ -68,8 +82,18 @@ export async function PUT(
       }
     }
 
-    await color.save();
-    return NextResponse.json(color);
+    updateData.updated_at = new Date().toISOString();
+
+    const { data: updatedColor, error: updateError } = await supabase
+      .from("colors")
+      .update(updateData)
+      .eq("id", id)
+      .select()
+      .single();
+
+    if (updateError) throw updateError;
+
+    return NextResponse.json(updatedColor);
   } catch (error: any) {
     console.error("Error updating color:", error);
     return NextResponse.json(
@@ -90,13 +114,24 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    await connectDB();
     const { id } = await params;
 
-    const color = await Color.findByIdAndDelete(id);
-    if (!color) {
+    const { data: color, error: getError } = await supabase
+      .from("colors")
+      .select("id")
+      .eq("id", id)
+      .maybeSingle();
+
+    if (getError || !color) {
       return NextResponse.json({ error: "Color not found" }, { status: 404 });
     }
+
+    const { error: deleteError } = await supabase
+      .from("colors")
+      .delete()
+      .eq("id", id);
+
+    if (deleteError) throw deleteError;
 
     return NextResponse.json({ message: "Color deleted successfully" });
   } catch (error: any) {

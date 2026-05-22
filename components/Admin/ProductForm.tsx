@@ -81,17 +81,36 @@ export default function ProductForm({
           sizesRes.json(),
         ]);
 
-        setCategories(categoriesData || []);
-        setColors(colorsData || []);
+        const mappedCategories = (categoriesData || []).map((c: any) => ({
+          ...c,
+          _id: c.id,
+        }));
+        const mappedColors = (colorsData || []).map((c: any) => ({
+          ...c,
+          _id: c.id,
+        }));
+        const mappedSizes = (sizesData || []).map((s: any) => ({
+          ...s,
+          _id: s.id,
+        }));
+
+        setCategories(mappedCategories);
+        setColors(mappedColors);
+
         // Add "One Size" option manually so it's always available
-        const fetchedSizes = sizesData || [];
-        const hasOneSize = fetchedSizes.some((s: any) => s.value === "One Size" || s.name === "One Size");
-        
+        const hasOneSize = mappedSizes.some(
+          (s: any) => s.value === "One Size" || s.name === "One Size"
+        );
+
         if (!hasOneSize) {
-          fetchedSizes.unshift({ _id: "one-size-manual", name: "One Size", value: "One Size" });
+          mappedSizes.unshift({
+            _id: "one-size-manual",
+            name: "One Size",
+            value: "One Size",
+          });
         }
-        
-        setSizes(fetchedSizes);
+
+        setSizes(mappedSizes);
       } catch (error) {
         console.error("Error fetching data:", error);
       }
@@ -104,7 +123,7 @@ export default function ProductForm({
       setFormData({
         title: product.title || "",
         description: product.description || "",
-        price: product.price || 0,
+        price: product.originalPrice ?? product.price ?? 0,
         category: product.category || "",
         subcategory: product.subcategory || "",
         images: product.images || [],

@@ -1,18 +1,44 @@
 import { NextRequest, NextResponse } from "next/server";
-import connectDB from "@/lib/db";
-import Product from "@/lib/models/Product";
+import { supabase } from "@/lib/supabase";
 import { verifyAuth } from "@/lib/utils/auth";
 import { deleteImageFromCloudinary } from "@/lib/utils/cloudinary";
+
+function extractProductHelpers(variants: any[]) {
+  if (!variants || !Array.isArray(variants)) {
+    return { colors: [], sizes: [], total_stock: 0 };
+  }
+  const colors = variants.map((v: any) => v.color).filter(Boolean);
+  const sizesSet = new Set<string>();
+  let totalStock = 0;
+  variants.forEach((v: any) => {
+    if (v.sizes && Array.isArray(v.sizes)) {
+      v.sizes.forEach((s: any) => {
+        if (s.size) sizesSet.add(s.size);
+        if (s.stock !== undefined) totalStock += Number(s.stock) || 0;
+      });
+    }
+  });
+  return {
+    colors: Array.from(new Set(colors)),
+    sizes: Array.from(sizesSet),
+    total_stock: totalStock,
+  };
+}
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await connectDB();
     const { id } = await params;
 
-    const product = await Product.findById(id).lean();
+    const { data: product, error } = await supabase
+      .from("products")
+      .select("*")
+      .eq("id", id)
+      .maybeSingle();
+
+    if (error) throw error;
     if (!product) {
       return NextResponse.json({ error: "Product not found" }, { status: 404 });
     }
@@ -37,9 +63,7 @@ export async function PUT(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    await connectDB();
     const { id } = await params;
-
     const body = await request.json();
     const {
       title,
@@ -53,25 +77,50 @@ export async function PUT(
       discountType,
     } = body;
 
-    const product = await Product.findById(id);
-    if (!product) {
+    const { data: product, error: getError } = await supabase
+      .from("products")
+      .select("*")
+      .eq("id", id)
+      .maybeSingle();
+
+    if (getError || !product) {
       return NextResponse.json({ error: "Product not found" }, { status: 404 });
     }
 
-    if (title) product.title = title;
-    if (description) product.description = description;
-    if (price !== undefined) product.price = price;
-    if (category) product.category = category;
-    if (subcategory !== undefined)
-      product.subcategory = subcategory || undefined;
-    if (images) product.images = images;
-    if (variants) product.variants = variants;
-    if (discount !== undefined) product.discount = discount;
-    if (discountType !== undefined) product.discountType = discountType;
+    const updateData: any = {};
+    if (title !== undefined) {
+      updateData.title = title;
+      updateData.slug = title
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/(^-|-$)/g, "");
+    }
+    if (description !== undefined) updateData.description = description;
+    if (price !== undefined) updateData.price = price;
+    if (category !== undefined) updateData.category = category;
+    updateData.subcategory = subcategory || null;
+    if (images !== undefined) updateData.images = images;
+    if (variants !== undefined) {
+      updateData.variants = variants;
+      const helpers = extractProductHelpers(variants);
+      updateData.colors = helpers.colors;
+      updateData.sizes = helpers.sizes;
+      updateData.total_stock = helpers.total_stock;
+    }
+    if (discount !== undefined) updateData.discount = discount;
+    if (discountType !== undefined) updateData.discount_type = discountType;
+    updateData.updated_at = new Date().toISOString();
 
-    await product.save();
+    const { data: updatedProduct, error: updateError } = await supabase
+      .from("products")
+      .update(updateData)
+      .eq("id", id)
+      .select()
+      .single();
 
-    return NextResponse.json({ product });
+    if (updateError) throw updateError;
+
+    return NextResponse.json({ product: updatedProduct });
   } catch (error: any) {
     console.error("Error updating product:", error);
     return NextResponse.json(
@@ -91,11 +140,15 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    await connectDB();
     const { id } = await params;
 
-    const product = await Product.findById(id);
-    if (!product) {
+    const { data: product, error: getError } = await supabase
+      .from("products")
+      .select("*")
+      .eq("id", id)
+      .maybeSingle();
+
+    if (getError || !product) {
       return NextResponse.json({ error: "Product not found" }, { status: 404 });
     }
 
@@ -107,7 +160,12 @@ export async function DELETE(
       await Promise.all(deletePromises);
     }
 
-    await Product.findByIdAndDelete(id);
+    const { error: deleteError } = await supabase
+      .from("products")
+      .delete()
+      .eq("id", id);
+
+    if (deleteError) throw deleteError;
 
     return NextResponse.json({ message: "Product deleted successfully" });
   } catch (error: any) {

@@ -1,27 +1,58 @@
 import { Suspense } from "react";
 import AdminProductsClient from "@/components/Admin/AdminProductsClient";
-import connectDB from "@/lib/db";
-import Product from "@/lib/models/Product";
-import Category from "@/lib/models/Category";
+import { supabase } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
 
+function mapProduct(p: any) {
+  if (!p) return p;
+  return {
+    ...p,
+    _id: p.id,
+    discountType: p.discount_type,
+    orderCount: p.order_count,
+    totalStock: p.total_stock,
+    createdAt: p.created_at,
+    updatedAt: p.updated_at,
+  };
+}
+
+function mapCategory(c: any) {
+  if (!c) return c;
+  return {
+    ...c,
+    _id: c.id,
+    discountType: c.discount_type,
+    createdAt: c.created_at,
+    updatedAt: c.updated_at,
+  };
+}
+
 async function getProducts() {
-  await connectDB();
-  const products = await Product.find().sort({ createdAt: -1 }).lean();
+  const { data: rawProducts, error: productsError } = await supabase
+    .from("products")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (productsError) throw productsError;
+
+  const products = (rawProducts || []).map(mapProduct);
   
   // Fetch categories for discount calculation
-  const categories = await Category.find({}).select("name discount discountType").lean();
+  const { data: rawCategories } = await supabase
+    .from("categories")
+    .select("name, discount, discount_type");
+
+  const categories = (rawCategories || []).map(mapCategory);
   const categoryMap = new Map(categories.map((c: any) => [c.name, c]));
 
-  // Apply category discounts to products that don't have their own discount
+  // Apply category discounts to products
   const productsWithDiscounts = products.map((product: any) => {
-    // If product doesn't have its own discount, check category discount
-    if ((!product.discount || product.discount === 0) && product.category && categoryMap.has(product.category)) {
+    if (product.category && categoryMap.has(product.category)) {
       const cat = categoryMap.get(product.category);
       if (cat && cat.discount && cat.discount > 0) {
-        product.discount = cat.discount;
-        product.discountType = cat.discountType || "percentage";
+        product.categoryDiscount = cat.discount;
+        product.categoryDiscountType = cat.discountType || "percentage";
       }
     }
     return product;

@@ -1,14 +1,29 @@
 import { Suspense } from "react";
 import AdminSlidersClient from "@/components/Admin/AdminSlidersClient";
-import connectDB from "@/lib/db";
-import Slider from "@/lib/models/Slider";
+import { supabase } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
 
+function mapSlider(s: any) {
+  if (!s) return s;
+  return {
+    ...s,
+    _id: s.id,
+    imageUrl: s.image_url,
+    isActive: s.is_active,
+    createdAt: s.created_at,
+    updatedAt: s.updated_at,
+  };
+}
+
 async function getSliders() {
-  await connectDB();
-  const sliders = await Slider.find().sort({ order: 1 }).lean();
-  return JSON.parse(JSON.stringify(sliders));
+  const { data: rawSliders, error } = await supabase
+    .from("sliders")
+    .select("*")
+    .order("order", { ascending: true });
+
+  if (error) throw error;
+  return JSON.parse(JSON.stringify((rawSliders || []).map(mapSlider)));
 }
 
 export default async function AdminSlidersPage() {

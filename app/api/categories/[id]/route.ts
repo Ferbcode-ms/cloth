@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import connectDB from "@/lib/db";
-import Category from "@/lib/models/Category";
+import { supabase } from "@/lib/supabase";
 import { verifyAuth } from "@/lib/utils/auth";
 
 // GET single category
@@ -9,10 +8,14 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await connectDB();
     const { id } = await params;
-    const category = await Category.findById(id).lean();
+    const { data: category, error } = await supabase
+      .from("categories")
+      .select("*")
+      .eq("id", id)
+      .maybeSingle();
 
+    if (error) throw error;
     if (!category) {
       return NextResponse.json(
         { error: "Category not found" },
@@ -41,18 +44,25 @@ export async function PUT(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    await connectDB();
     const { id } = await params;
     const body = await request.json();
     const { name, subcategories, image, discount, discountType } = body;
 
-    const category = await Category.findById(id);
-    if (!category) {
+    // Fetch existing category
+    const { data: category, error: getError } = await supabase
+      .from("categories")
+      .select("*")
+      .eq("id", id)
+      .maybeSingle();
+
+    if (getError || !category) {
       return NextResponse.json(
         { error: "Category not found" },
         { status: 404 }
       );
     }
+
+    const updateData: any = {};
 
     if (name) {
       const slug = name
@@ -61,10 +71,14 @@ export async function PUT(
         .replace(/(^-|-$)/g, "");
 
       // Check if another category with same name or slug exists
-      const existing = await Category.findOne({
-        _id: { $ne: id },
-        $or: [{ name }, { slug }],
-      });
+      const { data: existing, error: findError } = await supabase
+        .from("categories")
+        .select("id")
+        .neq("id", id)
+        .or(`name.eq."${name}",slug.eq."${slug}"`)
+        .maybeSingle();
+
+      if (findError) throw findError;
 
       if (existing) {
         return NextResponse.json(
@@ -73,12 +87,11 @@ export async function PUT(
         );
       }
 
-      category.name = name;
-      category.slug = slug;
+      updateData.name = name;
+      updateData.slug = slug;
     }
 
     if (subcategories !== undefined) {
-      // Ensure all subcategories have slugs
       const processedSubcategories = subcategories.map((sub: any) => {
         if (!sub.slug && sub.name) {
           return {
@@ -91,23 +104,33 @@ export async function PUT(
         }
         return sub;
       });
-      category.subcategories = processedSubcategories;
+      updateData.subcategories = processedSubcategories;
     }
 
     if (image !== undefined) {
-      category.image = image || undefined;
+      updateData.image = image || null;
     }
 
     if (discount !== undefined) {
-      category.discount = discount;
+      updateData.discount = discount;
     }
 
     if (discountType !== undefined) {
-      category.discountType = discountType;
+      updateData.discount_type = discountType;
     }
 
-    await category.save();
-    return NextResponse.json(category);
+    updateData.updated_at = new Date().toISOString();
+
+    const { data: updatedCategory, error: updateError } = await supabase
+      .from("categories")
+      .update(updateData)
+      .eq("id", id)
+      .select()
+      .single();
+
+    if (updateError) throw updateError;
+
+    return NextResponse.json(updatedCategory);
   } catch (error: any) {
     console.error("Error updating category:", error);
     return NextResponse.json(
@@ -128,31 +151,45 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    await connectDB();
     const { id } = await params;
 
-    // Check if any products are using this category
-    const Product = (await import("@/lib/models/Product")).default;
-    const productsCount = await Product.countDocuments({
-      $or: [{ category: id }, { "category._id": id }],
-    });
+    // Fetch category name first for product association checking
+    const { data: category, error: getError } = await supabase
+      .from("categories")
+      .select("name")
+      .eq("id", id)
+      .maybeSingle();
 
-    if (productsCount > 0) {
-      return NextResponse.json(
-        {
-          error: `Cannot delete category. ${productsCount} product(s) are using it.`,
-        },
-        { status: 400 }
-      );
-    }
-
-    const category = await Category.findByIdAndDelete(id);
-    if (!category) {
+    if (getError || !category) {
       return NextResponse.json(
         { error: "Category not found" },
         { status: 404 }
       );
     }
+
+    // Check if any products are using this category
+    const { count, error: countError } = await supabase
+      .from("products")
+      .select("*", { count: "exact", head: true })
+      .or(`category.eq."${id}",category.eq."${category.name}"`);
+
+    if (countError) throw countError;
+
+    if (count && count > 0) {
+      return NextResponse.json(
+        {
+          error: `Cannot delete category. ${count} product(s) are using it.`,
+        },
+        { status: 400 }
+      );
+    }
+
+    const { error: deleteError } = await supabase
+      .from("categories")
+      .delete()
+      .eq("id", id);
+
+    if (deleteError) throw deleteError;
 
     return NextResponse.json({ message: "Category deleted successfully" });
   } catch (error: any) {

@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import connectDB from "@/lib/db";
-import Size from "@/lib/models/Size";
+import { supabase } from "@/lib/supabase";
 import { verifyAuth } from "@/lib/utils/auth";
 
 // GET single size
@@ -9,10 +8,14 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await connectDB();
     const { id } = await params;
-    const size = await Size.findById(id).lean();
+    const { data: size, error } = await supabase
+      .from("sizes")
+      .select("*")
+      .eq("id", id)
+      .maybeSingle();
 
+    if (error) throw error;
     if (!size) {
       return NextResponse.json({ error: "Size not found" }, { status: 404 });
     }
@@ -38,27 +41,38 @@ export async function PUT(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    await connectDB();
     const { id } = await params;
     const body = await request.json();
     const { name, value, order } = body;
 
-    const size = await Size.findById(id);
-    if (!size) {
+    const { data: size, error: getError } = await supabase
+      .from("sizes")
+      .select("*")
+      .eq("id", id)
+      .maybeSingle();
+
+    if (getError || !size) {
       return NextResponse.json({ error: "Size not found" }, { status: 404 });
     }
 
-    if (name) size.name = name;
-    if (value) size.value = value;
-    if (order !== undefined) size.order = order;
+    const updateData: any = {};
+    if (name) updateData.name = name;
+    if (value) updateData.value = value;
+    if (order !== undefined) updateData.order = order;
 
     // Check if another size with same name or value exists
     if (name || value) {
-      const query: any = { _id: { $ne: id } };
-      if (name) query.name = name;
-      if (value) query.value = value;
+      let query = supabase.from("sizes").select("id").neq("id", id);
+      if (name && value) {
+        query = query.or(`name.eq."${name}",value.eq."${value}"`);
+      } else if (name) {
+        query = query.eq("name", name);
+      } else if (value) {
+        query = query.eq("value", value);
+      }
 
-      const existing = await Size.findOne(query);
+      const { data: existing, error: findError } = await query.maybeSingle();
+      if (findError) throw findError;
 
       if (existing) {
         return NextResponse.json(
@@ -68,8 +82,18 @@ export async function PUT(
       }
     }
 
-    await size.save();
-    return NextResponse.json(size);
+    updateData.updated_at = new Date().toISOString();
+
+    const { data: updatedSize, error: updateError } = await supabase
+      .from("sizes")
+      .update(updateData)
+      .eq("id", id)
+      .select()
+      .single();
+
+    if (updateError) throw updateError;
+
+    return NextResponse.json(updatedSize);
   } catch (error: any) {
     console.error("Error updating size:", error);
     return NextResponse.json(
@@ -90,20 +114,37 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    await connectDB();
     const { id } = await params;
 
-    const size = await Size.findByIdAndDelete(id);
-    if (!size) {
+    const { data: size, error: getError } = await supabase
+      .from("sizes")
+      .select("id")
+      .eq("id", id)
+      .maybeSingle();
+
+    if (getError || !size) {
       return NextResponse.json({ error: "Size not found" }, { status: 404 });
     }
 
+    const { error: deleteError } = await supabase
+      .from("sizes")
+      .delete()
+      .eq("id", id);
+
+    if (deleteError) throw deleteError;
+
     // Re-normalize all order values to be sequential (0, 1, 2, 3...)
-    const allSizes = await Size.find().sort({ order: 1, name: 1 });
-    for (let i = 0; i < allSizes.length; i++) {
-      if (allSizes[i].order !== i) {
-        allSizes[i].order = i;
-        await allSizes[i].save();
+    const { data: allSizes } = await supabase
+      .from("sizes")
+      .select("*")
+      .order("order", { ascending: true })
+      .order("name", { ascending: true });
+
+    if (allSizes) {
+      for (let i = 0; i < allSizes.length; i++) {
+        if (allSizes[i].order !== i) {
+          await supabase.from("sizes").update({ order: i }).eq("id", allSizes[i].id);
+        }
       }
     }
 

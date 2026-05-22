@@ -1,12 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import connectDB from "@/lib/db";
-import AdminUser from "@/lib/models/AdminUser";
+import { supabase } from "@/lib/supabase";
+import bcrypt from "bcryptjs";
 import { signToken } from "@/lib/utils/auth";
 
 export async function POST(request: NextRequest) {
   try {
-    await connectDB();
-
     const { email, password } = await request.json();
 
     if (!email || !password) {
@@ -16,15 +14,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const admin = await AdminUser.findOne({ email: email.toLowerCase() });
-    if (!admin) {
+    // Query admin user in Supabase
+    const { data: admin, error: dbError } = await supabase
+      .from("admin_users")
+      .select("*")
+      .eq("email", email.toLowerCase())
+      .maybeSingle();
+
+    if (dbError || !admin) {
       return NextResponse.json(
         { error: "Invalid credentials" },
         { status: 401 }
       );
     }
 
-    const isPasswordValid = await admin.comparePassword(password);
+    // Compare hashed password
+    const isPasswordValid = await bcrypt.compare(password, admin.password);
     if (!isPasswordValid) {
       return NextResponse.json(
         { error: "Invalid credentials" },
@@ -34,7 +39,7 @@ export async function POST(request: NextRequest) {
 
     const token = signToken({
       email: admin.email,
-      userId: (admin._id as any).toString(),
+      userId: admin.id,
     });
 
     const response = NextResponse.json({
@@ -52,6 +57,7 @@ export async function POST(request: NextRequest) {
 
     return response;
   } catch (error: any) {
+    console.error("Login error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

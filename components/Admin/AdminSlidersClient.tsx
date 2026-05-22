@@ -61,7 +61,15 @@ export default function AdminSlidersClient({
     try {
       const response = await fetch("/api/sliders");
       const data = await response.json();
-      setSliders(data || []);
+      const mapped = (data || []).map((s: any) => ({
+        ...s,
+        _id: s.id,
+        imageUrl: s.image_url,
+        isActive: s.is_active,
+        createdAt: s.created_at,
+        updatedAt: s.updated_at,
+      }));
+      setSliders(mapped);
     } catch (error) {
       console.error("Error fetching sliders:", error);
     } finally {

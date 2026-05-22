@@ -32,6 +32,8 @@ interface Product {
   }>;
   discount?: number;
   discountType?: "percentage" | "fixed";
+  categoryDiscount?: number;
+  categoryDiscountType?: "percentage" | "fixed";
 }
 
 interface AdminProductsClientProps {
@@ -73,7 +75,13 @@ export default function AdminProductsClient({
   useEffect(() => {
     fetch("/api/categories")
       .then((res) => res.json())
-      .then((data) => setCategories(data || []))
+      .then((data) => {
+        const mapped = (data || []).map((c: any) => ({
+          ...c,
+          _id: c.id,
+        }));
+        setCategories(mapped);
+      })
       .catch((err) => console.error("Error fetching categories:", err));
   }, []);
 
@@ -361,15 +369,25 @@ export default function AdminProductsClient({
                           ₹{product.price}
                         </TableCell>
                         <TableCell>
-                          {product.discount && product.discount > 0 ? (
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                              {product.discountType === "fixed" ? "₹" : ""}
-                              {product.discount}
-                              {product.discountType === "percentage" ? "%" : ""}
-                            </span>
-                          ) : (
-                            <span className="text-muted-foreground text-xs">-</span>
-                          )}
+                          <div className="flex flex-col sm:flex-row gap-1">
+                            {product.discount && product.discount > 0 && (
+                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                {product.discountType === "fixed" ? "₹" : ""}
+                                {product.discount}
+                                {product.discountType === "percentage" ? "%" : ""}
+                              </span>
+                            )}
+                            {product.categoryDiscount && product.categoryDiscount > 0 && (
+                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800" title="Category Discount">
+                                {product.categoryDiscountType === "fixed" ? "₹" : ""}
+                                {product.categoryDiscount}
+                                {product.categoryDiscountType === "percentage" ? "%" : ""} (Cat)
+                              </span>
+                            )}
+                            {(!product.discount || product.discount === 0) && (!product.categoryDiscount || product.categoryDiscount === 0) && (
+                              <span className="text-muted-foreground text-xs">-</span>
+                            )}
+                          </div>
                         </TableCell>
                         <TableCell className="text-textSecondary">
                           {product.category}

@@ -1,16 +1,56 @@
 import { NextRequest, NextResponse } from "next/server";
-import connectDB from "@/lib/db";
-import Product from "@/lib/models/Product";
-import Category from "@/lib/models/Category";
+import { supabase } from "@/lib/supabase";
 import { verifyAuth } from "@/lib/utils/auth";
 import { calculateProductPrice } from "@/lib/utils/price";
 
+function extractProductHelpers(variants: any[]) {
+  if (!variants || !Array.isArray(variants)) {
+    return { colors: [], sizes: [], total_stock: 0 };
+  }
+  const colors = variants.map((v: any) => v.color).filter(Boolean);
+  const sizesSet = new Set<string>();
+  let totalStock = 0;
+  variants.forEach((v: any) => {
+    if (v.sizes && Array.isArray(v.sizes)) {
+      v.sizes.forEach((s: any) => {
+        if (s.size) sizesSet.add(s.size);
+        if (s.stock !== undefined) totalStock += Number(s.stock) || 0;
+      });
+    }
+  });
+  return {
+    colors: Array.from(new Set(colors)),
+    sizes: Array.from(sizesSet),
+    total_stock: totalStock,
+  };
+}
+
+function mapProduct(p: any) {
+  if (!p) return p;
+  return {
+    ...p,
+    _id: p.id,
+    discountType: p.discount_type,
+    orderCount: p.order_count,
+    totalStock: p.total_stock,
+    createdAt: p.created_at,
+    updatedAt: p.updated_at,
+  };
+}
+
+function mapCategory(c: any) {
+  if (!c) return c;
+  return {
+    ...c,
+    _id: c.id,
+    discountType: c.discount_type,
+    createdAt: c.created_at,
+    updatedAt: c.updated_at,
+  };
+}
+
 export async function GET(request: NextRequest) {
   try {
-    await connectDB();
-
-    await connectDB();
-
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "12");
@@ -19,81 +59,44 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get("search");
     const skip = (page - 1) * limit;
 
-    // Build Match Stage
-    const matchStage: any = {};
-    
+    let query = supabase.from("products").select("*", { count: "exact" });
+
     if (category) {
-      matchStage.category = category;
+      query = query.eq("category", category);
     }
 
     if (search) {
-      matchStage.$or = [
-        { title: { $regex: search, $options: "i" } },
-        { description: { $regex: search, $options: "i" } },
-        { category: { $regex: search, $options: "i" } },
-      ];
+      query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%,category.ilike.%${search}%`);
     }
 
-    // Build Pipeline
-    const pipeline: any[] = [
-      { $match: matchStage },
-      // Calculate total stock for filtering
-      {
-        $addFields: {
-          totalStock: {
-            $reduce: {
-              input: "$variants",
-              initialValue: 0,
-              in: {
-                $add: [
-                  "$$value",
-                  {
-                    $reduce: {
-                      input: "$$this.sizes",
-                      initialValue: 0,
-                      in: { $add: ["$$value", "$$this.stock"] },
-                    },
-                  },
-                ],
-              },
-            },
-          },
-        },
-      },
-      // Sort by newest first
-      { $sort: { createdAt: -1 } },
-    ];
-
-    // Apply Stock Status Filter
     if (stockStatus) {
       if (stockStatus === "out_of_stock") {
-        pipeline.push({ $match: { totalStock: 0 } });
+        query = query.eq("total_stock", 0);
       } else if (stockStatus === "low_stock") {
-        pipeline.push({ $match: { totalStock: { $gt: 0, $lt: 10 } } });
+        query = query.gt("total_stock", 0).lt("total_stock", 10);
       } else if (stockStatus === "in_stock") {
-        pipeline.push({ $match: { totalStock: { $gte: 10 } } });
+        query = query.gte("total_stock", 10);
       }
     }
 
-    // Pagination Facet
-    pipeline.push({
-      $facet: {
-        metadata: [{ $count: "total" }],
-        products: [{ $skip: skip }, { $limit: limit }],
-      },
-    });
+    const { data: rawProducts, count, error } = await query
+      .order("created_at", { ascending: false })
+      .range(skip, skip + limit - 1);
 
-    const result = await Product.aggregate(pipeline);
-    
-    const products = result[0].products;
-    const total = result[0].metadata[0]?.total || 0;
+    if (error) throw error;
 
-    // calculate discounts like before
-    const categories = await Category.find({}).select("name discount discountType").lean();
+    const total = count || 0;
+    const products = (rawProducts || []).map(mapProduct);
+
+    // Fetch categories for discount calculation
+    const { data: rawCategories } = await supabase
+      .from("categories")
+      .select("name, discount, discount_type");
+
+    const categories = (rawCategories || []).map(mapCategory);
     const categoryMap = new Map(categories.map((c: any) => [c.name, c]));
 
     const productsWithDiscounts = products.map((product: any) => {
-      // Since aggregate return plain objects, we don't need .lean() logic here
       return calculateProductPrice(product, categoryMap);
     });
 
@@ -122,8 +125,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    await connectDB();
-
     const body = await request.json();
     const {
       title,
@@ -148,7 +149,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate images array
     if (!Array.isArray(images) || images.length === 0) {
       return NextResponse.json(
         { error: "At least one image is required" },
@@ -156,7 +156,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate variants array
     if (!Array.isArray(variants) || variants.length === 0) {
       return NextResponse.json(
         { error: "At least one variant is required" },
@@ -164,7 +163,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate each variant has color and sizes
     for (let i = 0; i < variants.length; i++) {
       const variant = variants[i];
       if (!variant.color) {
@@ -181,52 +179,52 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Generate slug from title
     const slug = title
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/(^-|-$)/g, "");
 
-    const product = new Product({
-      title,
-      description,
-      price,
-      category,
-      subcategory: subcategory || undefined,
-      images,
-      variants,
-      slug,
-      discount: discount || 0,
-      discountType: discountType || "percentage",
-    });
+    const helpers = extractProductHelpers(variants);
 
-    await product.save();
+    const { data: newProduct, error: insertError } = await supabase
+      .from("products")
+      .insert({
+        title,
+        description,
+        price,
+        category,
+        subcategory: subcategory || null,
+        images,
+        variants,
+        slug,
+        discount: discount || 0,
+        discount_type: discountType || "percentage",
+        colors: helpers.colors,
+        sizes: helpers.sizes,
+        total_stock: helpers.total_stock,
+      })
+      .select()
+      .single();
+
+    if (insertError) {
+      if (insertError.code === "23505") {
+        return NextResponse.json(
+          { error: "Product with this title already exists" },
+          { status: 400 }
+        );
+      }
+      throw insertError;
+    }
 
     return NextResponse.json(
-      { product: JSON.parse(JSON.stringify(product)) },
+      { product: mapProduct(newProduct) },
       { status: 201 }
     );
   } catch (error: any) {
     console.error("Error creating product:", error);
-
-    // Handle duplicate slug error
-    if (error.code === 11000) {
-      return NextResponse.json(
-        { error: "Product with this title already exists" },
-        { status: 400 }
-      );
-    }
-
-    // Handle Mongoose validation errors
-    if (error.name === "ValidationError") {
-      const errors = Object.values(error.errors).map((err: any) => err.message);
-      return NextResponse.json({ error: errors.join(", ") }, { status: 400 });
-    }
-
     return NextResponse.json(
       { error: error.message || "Failed to create product" },
       { status: 500 }
     );
   }
 }
-

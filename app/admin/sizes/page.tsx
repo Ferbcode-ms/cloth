@@ -1,14 +1,28 @@
 import { Suspense } from "react";
 import AdminSizesClient from "@/components/Admin/AdminSizesClient";
-import connectDB from "@/lib/db";
-import Size from "@/lib/models/Size";
+import { supabase } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
 
+function mapSize(s: any) {
+  if (!s) return s;
+  return {
+    ...s,
+    _id: s.id,
+    createdAt: s.created_at,
+    updatedAt: s.updated_at,
+  };
+}
+
 async function getSizes() {
-  await connectDB();
-  const sizes = await Size.find().sort({ order: 1, name: 1 }).lean();
-  return JSON.parse(JSON.stringify(sizes));
+  const { data: rawSizes, error } = await supabase
+    .from("sizes")
+    .select("*")
+    .order("order", { ascending: true })
+    .order("name", { ascending: true });
+
+  if (error) throw error;
+  return JSON.parse(JSON.stringify((rawSizes || []).map(mapSize)));
 }
 
 export default async function AdminSizesPage() {
@@ -20,4 +34,3 @@ export default async function AdminSizesPage() {
     </Suspense>
   );
 }
-

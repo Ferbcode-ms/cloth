@@ -44,10 +44,22 @@ export default function ProductInfo({ product }: ProductInfoProps) {
   const selectedVariant = product.variants.find(
     (v) => v.color === selectedColor
   );
-  const allSizes = selectedVariant?.sizes || [];
+  
+  // Deduplicate and sum stocks for sizes with the same name to prevent duplicate React keys
+  const rawSizes = selectedVariant?.sizes || [];
+  const allSizes = rawSizes.reduce((acc: typeof rawSizes, current) => {
+    const existing = acc.find((s) => s.size === current.size);
+    if (existing) {
+      existing.stock = (existing.stock || 0) + (current.stock || 0);
+    } else {
+      acc.push({ ...current });
+    }
+    return acc;
+  }, []);
+
   const availableSizes = allSizes.filter((s) => s.stock > 0);
   const selectedSizeStock =
-    selectedVariant?.sizes.find((s) => s.size === selectedSize)?.stock || 0;
+    allSizes.find((s) => s.size === selectedSize)?.stock || 0;
 
   const handleQuantityChange = (type: "increment" | "decrement") => {
     if (type === "increment") {

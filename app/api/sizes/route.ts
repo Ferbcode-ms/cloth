@@ -1,13 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
-import connectDB from "@/lib/db";
-import Size from "@/lib/models/Size";
+import { supabase } from "@/lib/supabase";
 import { verifyAuth } from "@/lib/utils/auth";
 
 // GET all sizes
 export async function GET(request: NextRequest) {
   try {
-    await connectDB();
-    const sizes = await Size.find().sort({ order: 1, name: 1 }).lean();
+    const { data: sizes, error } = await supabase
+      .from("sizes")
+      .select("*")
+      .order("order", { ascending: true })
+      .order("name", { ascending: true });
+
+    if (error) throw error;
     return NextResponse.json(sizes);
   } catch (error: any) {
     console.error("Error fetching sizes:", error);
@@ -26,7 +30,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    await connectDB();
     const body = await request.json();
     const { name, value, order } = body;
 
@@ -38,9 +41,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if size with same name or value exists
-    const existing = await Size.findOne({
-      $or: [{ name }, { value }],
-    });
+    const { data: existing, error: findError } = await supabase
+      .from("sizes")
+      .select("id")
+      .or(`name.eq."${name}",value.eq."${value}"`)
+      .maybeSingle();
+
+    if (findError) throw findError;
 
     if (existing) {
       return NextResponse.json(
@@ -49,13 +56,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const size = new Size({
-      name,
-      value,
-      order: order || 0,
-    });
+    const { data: size, error: insertError } = await supabase
+      .from("sizes")
+      .insert({
+        name,
+        value,
+        order: order || 0,
+      })
+      .select()
+      .single();
 
-    await size.save();
+    if (insertError) throw insertError;
+
     return NextResponse.json(size, { status: 201 });
   } catch (error: any) {
     console.error("Error creating size:", error);
@@ -65,4 +77,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

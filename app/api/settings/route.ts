@@ -1,15 +1,35 @@
 import { NextRequest, NextResponse } from "next/server";
-import connectDB from "@/lib/db";
-import Settings from "@/lib/models/Settings";
+import { supabase } from "@/lib/supabase";
 import { verifyAuth } from "@/lib/utils/auth";
+
+const defaultBanner = {
+  text: "Sign up and get 20% off to your first order.",
+  linkUrl: "/products",
+  linkText: "Sign Up Now",
+  isVisible: true,
+};
 
 export async function GET() {
   try {
-    await connectDB();
-    let settings = await Settings.findOne();
-    
+    let { data: settings, error } = await supabase
+      .from("settings")
+      .select("*")
+      .limit(1)
+      .maybeSingle();
+
+    if (error) throw error;
+
     if (!settings) {
-      settings = await Settings.create({});
+      const { data: newSettings, error: insertError } = await supabase
+        .from("settings")
+        .insert({
+          banner: defaultBanner,
+        })
+        .select()
+        .single();
+
+      if (insertError) throw insertError;
+      settings = newSettings;
     }
 
     return NextResponse.json(settings);
@@ -29,17 +49,42 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    await connectDB();
     const body = await request.json();
-    
-    let settings = await Settings.findOne();
+    const { banner } = body;
+
+    let { data: settings, error: getError } = await supabase
+      .from("settings")
+      .select("*")
+      .limit(1)
+      .maybeSingle();
+
+    if (getError) throw getError;
+
     if (!settings) {
-      settings = new Settings(body);
+      const { data: newSettings, error: insertError } = await supabase
+        .from("settings")
+        .insert({
+          banner: banner || defaultBanner,
+        })
+        .select()
+        .single();
+
+      if (insertError) throw insertError;
+      settings = newSettings;
     } else {
-      Object.assign(settings, body);
+      const { data: updatedSettings, error: updateError } = await supabase
+        .from("settings")
+        .update({
+          banner: banner || settings.banner,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", settings.id)
+        .select()
+        .single();
+
+      if (updateError) throw updateError;
+      settings = updatedSettings;
     }
-    
-    await settings.save();
 
     return NextResponse.json(settings);
   } catch (error) {

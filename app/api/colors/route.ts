@@ -1,13 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
-import connectDB from "@/lib/db";
-import Color from "@/lib/models/Color";
+import { supabase } from "@/lib/supabase";
 import { verifyAuth } from "@/lib/utils/auth";
 
 // GET all colors
 export async function GET(request: NextRequest) {
   try {
-    await connectDB();
-    const colors = await Color.find().sort({ name: 1 }).lean();
+    const { data: colors, error } = await supabase
+      .from("colors")
+      .select("*")
+      .order("name", { ascending: true });
+
+    if (error) throw error;
     return NextResponse.json(colors);
   } catch (error: any) {
     console.error("Error fetching colors:", error);
@@ -26,7 +29,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    await connectDB();
     const body = await request.json();
     const { name, value, hex } = body;
 
@@ -38,9 +40,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if color with same name or value exists
-    const existing = await Color.findOne({
-      $or: [{ name }, { value }],
-    });
+    const { data: existing, error: findError } = await supabase
+      .from("colors")
+      .select("id")
+      .or(`name.eq."${name}",value.eq."${value}"`)
+      .maybeSingle();
+
+    if (findError) throw findError;
 
     if (existing) {
       return NextResponse.json(
@@ -49,13 +55,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const color = new Color({
-      name,
-      value,
-      hex,
-    });
+    const { data: color, error: insertError } = await supabase
+      .from("colors")
+      .insert({ name, value, hex })
+      .select()
+      .single();
 
-    await color.save();
+    if (insertError) throw insertError;
+
     return NextResponse.json(color, { status: 201 });
   } catch (error: any) {
     console.error("Error creating color:", error);
@@ -65,4 +72,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

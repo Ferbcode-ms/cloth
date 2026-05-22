@@ -1,8 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
-import connectDB from "@/lib/db";
-import Order from "@/lib/models/Order";
-import Product from "@/lib/models/Product";
+import { supabase } from "@/lib/supabase";
 import { verifyAuth } from "@/lib/utils/auth";
+
+function mapOrder(o: any) {
+  if (!o) return o;
+  return {
+    ...o,
+    _id: o.id,
+    totalAmount: Number(o.total_amount),
+    createdAt: o.created_at,
+    updatedAt: o.updated_at,
+  };
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -10,8 +19,6 @@ export async function GET(request: NextRequest) {
     if (!auth) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-
-    await connectDB();
 
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get("page") || "1");
@@ -21,7 +28,7 @@ export async function GET(request: NextRequest) {
     const startDate = searchParams.get("startDate");
     const endDate = searchParams.get("endDate");
 
-    let query: any = {};
+    let dbQuery = supabase.from("orders").select("*", { count: "exact" });
 
     // Filter by specific date (today)
     if (dateFilter) {
@@ -31,10 +38,9 @@ export async function GET(request: NextRequest) {
       const endOfDay = new Date(date);
       endOfDay.setHours(23, 59, 59, 999);
 
-      query.createdAt = {
-        $gte: startOfDay,
-        $lte: endOfDay,
-      };
+      dbQuery = dbQuery
+        .gte("created_at", startOfDay.toISOString())
+        .lte("created_at", endOfDay.toISOString());
     }
 
     // Filter by date range
@@ -44,19 +50,19 @@ export async function GET(request: NextRequest) {
       const end = new Date(endDate);
       end.setHours(23, 59, 59, 999);
 
-      query.createdAt = {
-        $gte: start,
-        $lte: end,
-      };
+      dbQuery = dbQuery
+        .gte("created_at", start.toISOString())
+        .lte("created_at", end.toISOString());
     }
 
-    const orders = await Order.find(query)
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit)
-      .lean();
+    const { data: rawOrders, count, error } = await dbQuery
+      .order("created_at", { ascending: false })
+      .range(skip, skip + limit - 1);
 
-    const total = await Order.countDocuments(query);
+    if (error) throw error;
+
+    const total = count || 0;
+    const orders = (rawOrders || []).map(mapOrder);
 
     // Populate product images manually
     // 1. Get all product IDs from the orders
@@ -70,17 +76,22 @@ export async function GET(request: NextRequest) {
     });
 
     // 2. Fetch products with these IDs (only images)
-    const products = await Product.find({ _id: { $in: Array.from(productIds) } })
-      .select("images")
-      .lean();
+    let productImages = new Map<string, string>();
+    if (productIds.size > 0) {
+      const { data: products, error: productsError } = await supabase
+        .from("products")
+        .select("id, images")
+        .in("id", Array.from(productIds));
 
-    // 3. Create a map of product ID to image
-    const productImages = new Map<string, string>();
-    products.forEach((product: any) => {
-      if (product.images && product.images.length > 0) {
-        productImages.set(product._id.toString(), product.images[0]);
-      }
-    });
+      if (productsError) throw productsError;
+
+      // 3. Create a map of product ID to image
+      products.forEach((product: any) => {
+        if (product.images && product.images.length > 0) {
+          productImages.set(product.id.toString(), product.images[0]);
+        }
+      });
+    }
 
     // 4. Attach images to order items
     const ordersWithImages = orders.map((order: any) => {

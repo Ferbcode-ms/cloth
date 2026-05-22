@@ -1,25 +1,57 @@
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
-import connectDB from "@/lib/db";
-import Product from "@/lib/models/Product";
+import { supabase } from "@/lib/supabase";
 import ProductDetailClient from "@/components/products/ProductDetailClient";
 import RelatedProducts from "@/components/products/details/RelatedProducts";
+import { calculateProductPrice } from "@/lib/utils/price";
 
 export const revalidate = 3600; // Revalidate every hour
 
-import Category from "@/lib/models/Category";
-import { calculateProductPrice } from "@/lib/utils/price";
+function mapProduct(p: any) {
+  if (!p) return p;
+  return {
+    ...p,
+    _id: p.id,
+    discountType: p.discount_type,
+    orderCount: p.order_count,
+    totalStock: p.total_stock,
+    createdAt: p.created_at,
+    updatedAt: p.updated_at,
+  };
+}
+
+function mapCategory(c: any) {
+  if (!c) return c;
+  return {
+    ...c,
+    _id: c.id,
+    discountType: c.discount_type,
+    createdAt: c.created_at,
+    updatedAt: c.updated_at,
+  };
+}
 
 async function getProduct(slug: string) {
   try {
-    await connectDB();
-    const product: any = await Product.findOne({ slug }).lean();
-    if (!product) return null;
+    const { data: rawProduct, error } = await supabase
+      .from("products")
+      .select("*")
+      .eq("slug", slug)
+      .maybeSingle();
+
+    if (error || !rawProduct) return null;
+    const product = mapProduct(rawProduct);
 
     // Fetch category for discount calculation
-    const category: any = await Category.findOne({ name: product.category }).lean();
+    const { data: rawCategory } = await supabase
+      .from("categories")
+      .select("*")
+      .eq("name", product.category)
+      .maybeSingle();
+
+    const category = mapCategory(rawCategory);
     
-    // Generate a simple map for the single category
+    // Generate a map for the single category
     const categoryMap = new Map();
     if (category) {
       categoryMap.set(category.name, category);
@@ -31,23 +63,31 @@ async function getProduct(slug: string) {
 
     return JSON.parse(JSON.stringify(product));
   } catch (error) {
-    console.error("Error fetching product:", error);
+    console.error("Error fetching product:", (error as any)?.message || error);
     return null;
   }
 }
 
 async function getRelatedProducts(category: string, currentProductId: string) {
   try {
-    await connectDB();
-    const products = await Product.find({
-      category,
-      _id: { $ne: currentProductId },
-    })
-      .limit(4)
-      .lean();
+    const { data: rawProducts, error } = await supabase
+      .from("products")
+      .select("*")
+      .eq("category", category)
+      .neq("id", currentProductId)
+      .limit(4);
 
-    // Fetch category for discount calculation (we already know the category name)
-    const categoryData: any = await Category.findOne({ name: category }).lean();
+    if (error) throw error;
+    const products = (rawProducts || []).map(mapProduct);
+
+    // Fetch category for discount calculation
+    const { data: rawCategory } = await supabase
+      .from("categories")
+      .select("*")
+      .eq("name", category)
+      .maybeSingle();
+
+    const categoryData = mapCategory(rawCategory);
 
     // Helper map
     const categoryMap = new Map();
@@ -61,7 +101,7 @@ async function getRelatedProducts(category: string, currentProductId: string) {
 
     return JSON.parse(JSON.stringify(productsWithDiscounts));
   } catch (error) {
-    console.error("Error fetching related products:", error);
+    console.error("Error fetching related products:", (error as any)?.message || error);
     return [];
   }
 }

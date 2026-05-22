@@ -1,14 +1,28 @@
 import { Suspense } from "react";
 import AdminCategoriesClient from "@/components/Admin/AdminCategoriesClient";
-import connectDB from "@/lib/db";
-import Category from "@/lib/models/Category";
+import { supabase } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
 
+function mapCategory(c: any) {
+  if (!c) return c;
+  return {
+    ...c,
+    _id: c.id,
+    discountType: c.discount_type,
+    createdAt: c.created_at,
+    updatedAt: c.updated_at,
+  };
+}
+
 async function getCategories() {
-  await connectDB();
-  const categories = await Category.find().sort({ name: 1 }).lean();
-  return JSON.parse(JSON.stringify(categories));
+  const { data: rawCategories, error } = await supabase
+    .from("categories")
+    .select("*")
+    .order("name", { ascending: true });
+
+  if (error) throw error;
+  return JSON.parse(JSON.stringify((rawCategories || []).map(mapCategory)));
 }
 
 export default async function AdminCategoriesPage() {
