@@ -61,6 +61,14 @@ function mapSlider(s: any) {
   };
 }
 
+function mapTestimonial(t: any) {
+  if (!t) return t;
+  return {
+    ...t,
+    _id: t.id,
+  };
+}
+
 async function getNewArrivals() {
   try {
     const { data: rawProducts, error: productsError } = await supabase
@@ -124,6 +132,21 @@ async function getSliders() {
   }
 }
 
+async function getTestimonials() {
+  try {
+    const { data: rawTestimonials, error } = await supabase
+      .from("testimonials")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+    return JSON.parse(JSON.stringify((rawTestimonials || []).map(mapTestimonial)));
+  } catch (error) {
+    console.error("Error fetching testimonials:", (error as any)?.message || error);
+    return [];
+  }
+}
+
 async function getCategoryProducts(categoryName: string, limit: number = 6) {
   try {
     const { data: rawProducts, error: productsError } = await supabase
@@ -169,15 +192,17 @@ export default async function Home() {
   const newArrivalsData = getNewArrivals();
   const categoriesData = getCategories();
   const slidersData = getSliders();
+  const testimonialsData = getTestimonials();
   const category1Data = categoryNames[0] ? getCategoryProducts(categoryNames[0], 4) : Promise.resolve([]);
   const category2Data = categoryNames[1] ? getCategoryProducts(categoryNames[1], 4) : Promise.resolve([]);
   const category3Data = categoryNames[2] ? getCategoryProducts(categoryNames[2], 4) : Promise.resolve([]);
 
   // Parallel data fetching
-  const [newArrivals, categories, sliders, category1Products, category2Products, category3Products] = await Promise.all([
+  const [newArrivals, categories, sliders, testimonials, category1Products, category2Products, category3Products] = await Promise.all([
     newArrivalsData,
     categoriesData,
     slidersData,
+    testimonialsData,
     category1Data,
     category2Data,
     category3Data,
@@ -293,7 +318,7 @@ export default async function Home() {
       )}
 
       {/* Testimonials Section */}
-      <TestimonialsSection />
+      <TestimonialsSection testimonials={testimonials} />
     </div>
   );
 }

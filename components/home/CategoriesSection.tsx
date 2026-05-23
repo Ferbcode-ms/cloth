@@ -21,7 +21,7 @@ const getCategoryImage = (category: Category) => {
     return category.image;
   }
   // Default placeholder image
-  return "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=600&h=600&fit=crop&q=80";
+  return "https://images.unsplash.com/photo-1580480055273-228ff5388ef8?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8Y2hhaXJ8ZW58MHx8MHx8fDA%3D";
 };
 
 export default function CategoriesSection({ categories }: CategoriesSectionProps) {

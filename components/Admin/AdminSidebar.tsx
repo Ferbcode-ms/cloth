@@ -14,6 +14,7 @@ import {
   Settings,
   GalleryHorizontalEnd,
   Images,
+  MessageSquareQuote,
 } from "lucide-react";
 import {
   Sidebar,
@@ -67,6 +68,11 @@ const navigation = [
     name: "Sliders",
     href: "/admin/sliders",
     icon: Images,
+  },
+  {
+    name: "Testimonials",
+    href: "/admin/testimonials",
+    icon: MessageSquareQuote,
   },
 ];
 

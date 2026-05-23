@@ -10,38 +10,16 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { Star, CheckCircle2 } from "lucide-react";
 
-const testimonials = [
-  {
-    name: "Ethan R.",
-    verified: true,
-    rating: 5,
-    text: "This t-shirt is a must-have for anyone who appreciates good design. The minimalistic yet stylish pattern caught my eye, and the fit is perfect. I can see the designer's touch in every aspect of this shirt.",
-  },
-  {
-    name: "Olivia P.",
-    verified: true,
-    rating: 5,
-    text: "As a UI/UX enthusiast, I value simplicity and functionality. This t-shirt not only represents those principles but also feels great to wear. It's evident that the designer poured their creativity into making this t-shirt stand out.",
-  },
-  {
-    name: "Liam K.",
-    verified: true,
-    rating: 5,
-    text: "This t-shirt is a fusion of comfort and creativity. The fabric is soft, and the design speaks volumes about the designer's skill. It's like wearing a piece of art that reflects my passion for both design and fashion.",
-  },
-  {
-    name: "Samantha D.",
-    verified: true,
-    rating: 5,
-    text: "I absolutely love unique designs, and this t-shirt exceeded my expectations. As a fellow designer, I appreciate the attention to detail. This has become my go-to shirt for both casual and semi-formal occasions.",
-  },
-  {
-    name: "Michael T.",
-    verified: true,
-    rating: 5,
-    text: "Outstanding quality and design! The fabric feels premium and the fit is perfect. This t-shirt has quickly become one of my favorites in my wardrobe.",
-  },
-];
+interface Testimonial {
+  _id: string;
+  name: string;
+  rating: number;
+  text: string;
+}
+
+interface TestimonialsSectionProps {
+  testimonials: Testimonial[];
+}
 
 function StarRating({ rating }: { rating: number }) {
   return (
@@ -60,7 +38,11 @@ function StarRating({ rating }: { rating: number }) {
   );
 }
 
-export default function TestimonialsSection() {
+export default function TestimonialsSection({ testimonials }: TestimonialsSectionProps) {
+  if (!testimonials || testimonials.length === 0) {
+    return null;
+  }
+
   return (
     <section className="container mx-auto px-4 md:px-15 py-16 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-700">
       <Carousel
@@ -80,9 +62,9 @@ export default function TestimonialsSection() {
           </div>
         </div>
         <CarouselContent className="-ml-2 md:-ml-4">
-          {testimonials.map((testimonial, index) => (
+          {testimonials.map((testimonial) => (
             <CarouselItem
-              key={index}
+              key={testimonial._id}
               className="pl-2 md:pl-4 md:basis-1/2 lg:basis-1/3"
             >
               <Card className="h-full shadow-md">
